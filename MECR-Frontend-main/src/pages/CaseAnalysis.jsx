@@ -7,7 +7,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import {
   getAnomalies, getCase, getConflictMatrix, getDocumentAnalysis, getEntities,
-  getGraph, getReportContent, runAnalysis
+  getGraph, getReportContent, regenerateReport, downloadReportPdf, runAnalysis
 } from '../lib/api'
 import { Badge, Button, Card, Eyebrow } from '../components/ui/Primitives'
 
@@ -683,9 +683,57 @@ function Entities({ caseId }) {
 
 function Report({ caseId }) {
   const [report, setReport] = useState(null)
-  useEffect(() => { getReportContent(caseId).then(setReport).catch(() => {}) }, [caseId])
+  const [loading, setLoading] = useState(true)
+  const [regenerating, setRegenerating] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [error, setError] = useState(null)
+
+  function loadReport() {
+    setLoading(true)
+    setError(null)
+    getReportContent(caseId)
+      .then((data) => {
+        setReport(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to load report')
+        setLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    loadReport()
+  }, [caseId])
+
+  async function handleRegenerate() {
+    try {
+      setRegenerating(true)
+      setError(null)
+      const fresh = await regenerateReport(caseId)
+      setReport(fresh)
+    } catch (err) {
+      setError(err.message || 'Failed to regenerate report')
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
+  async function handleDownloadPdf() {
+    try {
+      setDownloadingPdf(true)
+      const num = report?.case?.caseNumber || caseId
+      const cleanName = `${num.replace(/[^A-Za-z0-9]+/g, '_')}-conflict-report.pdf`
+      await downloadReportPdf(caseId, cleanName)
+    } catch (err) {
+      setError(err.message || 'Failed to download PDF')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
 
   function downloadJSON() {
+    if (!report) return
     const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -695,65 +743,331 @@ function Report({ caseId }) {
     URL.revokeObjectURL(url)
   }
 
-  if (!report) return <Card className="p-6 text-sm text-textsoft">Generating report…</Card>
+  if (loading) {
+    return (
+      <Card className="p-8 text-center text-textsoft">
+        <div className="animate-spin inline-block w-6 h-6 border-2 border-current border-t-transparent rounded-full mb-2"></div>
+        <div className="text-sm">Loading explainable conflict-resolution report…</div>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 border-red-200 bg-red-50 text-red-800">
+        <div className="font-semibold mb-1">Report Error</div>
+        <p className="text-sm mb-3">{error}</p>
+        <Button onClick={loadReport} variant="secondary">Retry</Button>
+      </Card>
+    )
+  }
+
+  if (!report) {
+    return (
+      <Card className="p-6 text-sm text-textsoft">
+        No report available. Click below to generate one.
+        <div className="mt-3">
+          <Button onClick={handleRegenerate}>Generate Report</Button>
+        </div>
+      </Card>
+    )
+  }
 
   const s = report.stats || {}
+  const conflicts = report.conflicts || []
+  const anomalies = report.anomalies || []
+  const inventory = report.evidenceInventory || []
+  const defendants = report.defendantSummary || []
+  const recommendations = report.recommendations || []
+  const limitations = report.limitations || []
+
   return (
-    <div>
-      <div className="flex gap-3 mb-5 no-print">
-        <Button onClick={() => window.print()}>Print / Save as PDF</Button>
-        <Button variant="ghost" onClick={downloadJSON}>Download JSON</Button>
+    <div className="space-y-6">
+      {/* Top Action Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 no-print bg-panel p-4 rounded-lg border border-line">
+        <div className="text-xs text-textsoft">
+          Generated: <span className="font-mono text-ink">{new Date(report.generatedAt).toLocaleString()}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+          >
+            {downloadingPdf ? 'Generating PDF…' : 'Download PDF Report'}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={downloadJSON}
+          >
+            Download JSON
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleRegenerate}
+            disabled={regenerating}
+          >
+            {regenerating ? 'Regenerating…' : 'Regenerate Analysis'}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => window.print()}
+          >
+            Print
+          </Button>
+        </div>
       </div>
 
-      <Card className="p-8 max-w-3xl">
-        <div className="border-b border-line pb-4 mb-5">
-          <div className="font-mono text-[11px] uppercase tracking-widest text-gold mb-1">Explainable Conflict-Resolution Report</div>
-          <h2 className="font-serif text-2xl text-ink">{report.case.caseNumber || caseId}</h2>
-          <p className="text-textsoft text-sm">{report.case.court} · IPC/BNS {report.case.ipcSections}</p>
-          <p className="text-[11px] font-mono text-textsoft mt-1">
-            Generated {new Date(report.generatedAt).toLocaleString()}
+      <Card className="p-8 max-w-4xl mx-auto shadow-sm">
+        {/* Header Section */}
+        <div className="border-b border-line pb-5 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-gold font-semibold">
+              MECR · Explainable Conflict-Resolution Report
+            </span>
+            <Badge variant="outline" className="text-[11px]">
+              Status: {report.case?.status || 'Active'}
+            </Badge>
+          </div>
+          <h2 className="font-serif text-3xl text-ink font-bold">{report.case?.caseNumber || caseId}</h2>
+          <p className="text-textsoft text-sm mt-1">
+            <b>Court:</b> {report.case?.court || 'Unspecified'} &nbsp;·&nbsp;
+            <b>Statute:</b> IPC/BNS {report.case?.ipcSections || 'N/A'} &nbsp;·&nbsp;
+            <b>Parties:</b> {report.case?.peopleCount || 0} registered
           </p>
         </div>
 
-        <p className="text-sm text-text mb-5 leading-7">{report.summary}</p>
-
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          <Metric label="Documents" value={s.documents} />
-          <Metric label="Entities" value={s.entities} />
-          <Metric label="Contradictions" value={s.conflicts} />
-          <Metric label="Anomalies" value={s.anomalies} />
+        {/* Executive Summary */}
+        <div className="mb-6">
+          <h3 className="text-xs font-mono uppercase tracking-wider text-textsoft font-semibold mb-2">Executive Summary</h3>
+          <p className="text-sm text-text leading-relaxed bg-surface/40 p-4 rounded-md border border-line">
+            {report.executiveSummary || report.summary}
+          </p>
         </div>
 
-        <h3 className="font-serif font-semibold text-ink mb-2">Detected conflicts</h3>
-        <ul className="text-sm text-text leading-7 list-disc pl-5 mb-6">
-          {report.conflicts.map((c) => (
-            <li key={c.id}>
-              <b>{c.type}:</b> {c.left.claim} → {c.right.claim}{' '}
-              <span className="text-textsoft">({c.model})</span>
-            </li>
-          ))}
-          {report.conflicts.length === 0 && <li className="list-none text-textsoft">None.</li>}
-        </ul>
+        {/* Key Analysis Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+          <Metric label="Documents" value={s.documents || 0} />
+          <Metric label="Extracted Entities" value={s.entities || 0} />
+          <Metric label="Contradictions" value={s.conflicts || 0} />
+          <Metric label="Anomalies" value={s.anomalies || 0} />
+          <Metric label="Human Review" value={`${report.reviewSummary?.confirmed || 0} conf / ${report.reviewSummary?.pending || 0} pend`} />
+        </div>
 
-        <h3 className="font-serif font-semibold text-ink mb-2">Anomalies &amp; explanations</h3>
-        <ul className="text-sm text-text leading-7 list-disc pl-5 mb-6">
-          {report.anomalies.map((a) => (
-            <li key={a.id}>
-              <b>{a.type.replace(/_/g, ' ')}</b> — {a.entity}: {a.explanation}{' '}
-              <span className="text-textsoft">({a.model} {Math.round(a.score * 100)}%)</span>
-            </li>
-          ))}
-          {report.anomalies.length === 0 && <li className="list-none text-textsoft">None.</li>}
-        </ul>
+        {/* Evidence Inventory */}
+        <div className="mb-8">
+          <h3 className="font-serif text-lg font-bold text-ink mb-3">Scope of Analysis &amp; Evidence Inventory</h3>
+          {inventory.length === 0 ? (
+            <p className="text-sm text-textsoft">No evidence documents uploaded.</p>
+          ) : (
+            <div className="overflow-x-auto border border-line rounded-md">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-surface/80 text-textsoft font-semibold border-b border-line uppercase font-mono text-[10px]">
+                  <tr>
+                    <th className="p-2.5">ID</th>
+                    <th className="p-2.5">Exhibit Name</th>
+                    <th className="p-2.5">Type</th>
+                    <th className="p-2.5">Extracted Characters</th>
+                    <th className="p-2.5">Processing Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {inventory.map((ev) => (
+                    <tr key={ev.evidenceId} className="hover:bg-surface/30">
+                      <td className="p-2.5 font-mono font-medium text-ink">{ev.evidenceId}</td>
+                      <td className="p-2.5 font-medium">{ev.name}</td>
+                      <td className="p-2.5 text-textsoft uppercase text-[10px]">{ev.kind}</td>
+                      <td className="p-2.5">{ev.charCount?.toLocaleString() || 0}</td>
+                      <td className="p-2.5">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                          ev.status === 'processed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {ev.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
-        <h3 className="font-serif font-semibold text-ink mb-2">Recommended next steps</h3>
-        <ol className="text-sm text-text leading-7 list-decimal pl-5">
-          {report.recommendations.map((r, i) => <li key={i}>{r}</li>)}
-        </ol>
+        {/* Detected Contradictions & Conflicts */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-serif text-lg font-bold text-ink">
+              Detected Conflicts &amp; Contradictions ({conflicts.length})
+            </h3>
+            <span className="text-xs text-textsoft">Model: LegalBERT &amp; Cross-Document Rules</span>
+          </div>
 
-        <p className="text-[11px] text-textsoft mt-6 pt-4 border-t border-line">
-          This report is decision support only. All findings require human verification before use in proceedings.
-        </p>
+          {conflicts.length === 0 ? (
+            <p className="text-sm text-textsoft bg-surface/30 p-4 rounded border border-line">
+              No direct contradictions or cross-document factual conflicts were detected across the evidence.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {conflicts.map((c) => {
+                const g = c.grounding || {}
+                const left = g.statementA || c.left || {}
+                const right = g.statementB || c.right || {}
+                const rev = c.review || {}
+                return (
+                  <div key={c.id} className="border border-red-200 bg-red-50/40 rounded-lg p-4 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-red-900">[{c.id}]</span>
+                        <span className="font-semibold text-ink">{c.category || c.type}</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800 uppercase font-mono text-[10px]">
+                          {c.severity || 'material'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-textsoft">Detected by {c.model} {c.confidence ? `(${c.confidence})` : ''}</span>
+                        <span className={`px-2 py-0.5 rounded font-mono text-[10px] uppercase font-semibold ${
+                          rev.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' :
+                          rev.status === 'dismissed' ? 'bg-gray-200 text-gray-700' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          Review: {rev.status || 'pending'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Source Excerpts / Statements */}
+                    <div className="grid md:grid-cols-2 gap-3 mb-3 mt-2">
+                      <div className="bg-white p-3 rounded border border-red-100 text-xs">
+                        <div className="font-semibold text-textsoft mb-1">
+                          Source A: {left.source || 'Exhibit A'} {left.evidenceId ? `(${left.evidenceId})` : ''}
+                        </div>
+                        <p className="italic text-ink">"{left.claim}"</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-red-100 text-xs">
+                        <div className="font-semibold text-textsoft mb-1">
+                          Source B: {right.source || 'Exhibit B'} {right.evidenceId ? `(${right.evidenceId})` : ''}
+                        </div>
+                        <p className="italic text-ink">"{right.claim}"</p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-text space-y-1">
+                      <p><b>Grounded Explanation:</b> {c.explanation}</p>
+                      {c.recommendation && (
+                        <p className="text-textsoft"><b>Recommendation:</b> {c.recommendation}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Anomalies & Integrity Signals */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-serif text-lg font-bold text-ink">
+              Anomalies &amp; Missing Information ({anomalies.length})
+            </h3>
+            <span className="text-xs text-textsoft">Model: XGBoost &amp; Rule Engine</span>
+          </div>
+
+          {anomalies.length === 0 ? (
+            <p className="text-sm text-textsoft bg-surface/30 p-4 rounded border border-line">
+              No anomalies, missing records, or integrity issues identified.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {anomalies.map((a) => {
+                const rev = a.review || {}
+                return (
+                  <div key={a.id} className="border border-amber-200 bg-amber-50/40 rounded-lg p-3.5 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-amber-900">[{a.id}]</span>
+                        <span className="font-semibold text-ink">{a.category || a.type}: {a.entity}</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase font-mono text-[10px]">
+                          Risk: {a.label || 'Medium'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-textsoft">{a.model} {a.score ? `(${Math.round(a.score * 100)}%)` : ''}</span>
+                        <span className={`px-2 py-0.5 rounded font-mono text-[10px] uppercase font-semibold ${
+                          rev.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' :
+                          rev.status === 'dismissed' ? 'bg-gray-200 text-gray-700' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {rev.status || 'pending'}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-text leading-relaxed">{a.explanation}</p>
+                    {a.sources && a.sources.length > 0 && (
+                      <p className="text-[11px] text-textsoft mt-1.5">
+                        <b>Related Exhibits:</b> {a.sources.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Defendant-Wise Summary */}
+        {defendants.length > 0 && (
+          <div className="mb-8">
+            <h3 className="font-serif text-lg font-bold text-ink mb-3">Defendant-Wise Evidence Summary</h3>
+            <div className="border border-line rounded-md overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-surface/80 text-textsoft font-semibold border-b border-line uppercase font-mono text-[10px]">
+                  <tr>
+                    <th className="p-2.5">Defendant / Accused</th>
+                    <th className="p-2.5">Role</th>
+                    <th className="p-2.5">Linked Exhibits</th>
+                    <th className="p-2.5">Conflicts</th>
+                    <th className="p-2.5">Anomalies</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {defendants.map((d, i) => (
+                    <tr key={i} className="hover:bg-surface/30">
+                      <td className="p-2.5 font-semibold text-ink">{d.name}</td>
+                      <td className="p-2.5 text-textsoft capitalize">{d.role}</td>
+                      <td className="p-2.5">{d.evidenceIds?.length || 0} files</td>
+                      <td className="p-2.5 text-red-700 font-semibold">{d.conflicts || 0}</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">{d.anomalies || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Actionable Recommendations */}
+        <div className="mb-6">
+          <h3 className="font-serif text-lg font-bold text-ink mb-2">Findings Requiring Human Legal Review</h3>
+          <ol className="text-sm text-text leading-relaxed list-decimal pl-5 space-y-1">
+            {recommendations.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Limitations & Verification Notice */}
+        <div className="mb-6">
+          <h3 className="font-serif text-sm font-semibold text-ink mb-2">System Limitations &amp; Uncertainty</h3>
+          <ul className="text-xs text-textsoft leading-relaxed list-disc pl-5 space-y-1">
+            {limitations.map((l, i) => (
+              <li key={i}>{l}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Legal Disclaimer */}
+        <div className="text-[11px] text-textsoft border-t border-line pt-4 bg-surface/30 p-3 rounded">
+          <p className="font-semibold text-text mb-1">LEGAL RELIABILITY &amp; STATUTORY NOTICE:</p>
+          <p>{report.legalDisclaimer}</p>
+        </div>
       </Card>
     </div>
   )

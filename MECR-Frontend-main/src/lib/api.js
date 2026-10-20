@@ -258,6 +258,43 @@ export async function getReportContent(caseId) {
   return json(res)
 }
 
+export async function regenerateReport(caseId) {
+  const res = await fetch(`${BASE_URL}/report/${caseId}/regenerate`, {
+    method: 'POST',
+    headers: authHeaders(),
+  })
+  return json(res)
+}
+
+export async function downloadReportPdf(caseId, fallbackFilename = 'conflict-report.pdf') {
+  const res = await fetch(`${BASE_URL}/report/${caseId}/pdf`, {
+    headers: authHeaders(),
+  })
+  if (!res.ok) {
+    let errMessage = 'Failed to generate PDF'
+    try {
+      const err = await res.json()
+      if (err.detail) errMessage = err.detail
+    } catch (_) {}
+    throw new Error(errMessage)
+  }
+  const blob = await res.blob()
+  let filename = fallbackFilename
+  const disposition = res.headers.get('Content-Disposition')
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename="?([^";]+)"?/)
+    if (match && match[1]) filename = match[1]
+  }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 // --- Admin management (Admin only) ------------------------------------------
 
 export async function adminMe() {

@@ -1627,68 +1627,25 @@ def _ensure_results(case_id: str) -> dict:
         if not graph["nodes"]:
             graph = _graph_for(case_id)
 
-    # ---- 6. Explainable report ------------------------------------------
+    # ---- 6. Explainable report (Module 4) --------------------------------
     review_summary = _apply_reviews(case, conflicts, anomalies)
-    missing_count = sum(1 for a in anomalies if a.get("category") == "Missing information")
-    manipulation_count = sum(1 for a in anomalies if a.get("category") == "Possible manipulation")
-    conflict_word = "contradiction" if len(conflicts) == 1 else "contradictions"
-    anomaly_word = "anomaly" if len(anomalies) == 1 else "anomalies"
-    document_word = "document" if len(evidence) == 1 else "documents"
-    entity_word = "entity" if len(all_entities) == 1 else "entities"
-    recommendations = [
-        "Verify the source and chain of custody of flagged documents.",
-        "Review all detected contradictions for human verification.",
-        "Cross-reference anomalous evidence with additional sources.",
-        "Consult legal counsel before acting on AI-detected conflicts.",
-    ]
-    if missing_count:
-        recommendations.insert(1, "Collect the missing records/links identified by the rule engine.")
-    if party_rows:
-        recommendations.insert(1, "Check the per-defendant evidence coverage in the Parties tab.")
-    report = {
-        "case": case,
-        "generatedAt": _now(),
-        "summary": (
-            f"{len(evidence)} {document_word} analysed · {len(all_entities)} distinct legal {entity_word} extracted · "
-            f"{len(conflicts)} {conflict_word} and {len(anomalies)} {anomaly_word} detected "
-            f"({missing_count} missing-information, {manipulation_count} possible-manipulation)."
-        ),
-        "stats": {
-            "documents": len(evidence),
-            "entities": len(all_entities),
-            "conflicts": len(conflicts),
-            "anomalies": len(anomalies),
-            "missingInformation": missing_count,
-            "possibleManipulation": manipulation_count,
-            "parties": len(party_rows),
-            "graph_nodes": len(graph.get("nodes", [])),
-            "graph_edges": len(graph.get("edges", [])),
-        },
-        "reviewSummary": review_summary,
-        "conflicts": conflicts,
-        "anomalies": anomalies,
-        "entities": all_entities,
-        "parties": party_rows,
-        "defendantSummary": [p for p in party_rows
-                             if str(p.get("role", "")).lower() in {"defendant", "accused"}],
-        "models": _active_model_summary(),
-        "methodology": {
-            "pipeline": PIPELINE_STAGES,
-            "entity_model": "BiLSTM-CRF over an InLegalNER-trained tag set, plus case-party grounding",
-            "contradiction_model": "LegalBERT 3-class NLI over cross-document claim pairs",
-            "anomaly_models": "XGBoost document integrity + R-GCN graph integrity",
-            "rules": "Missing-information, defendant-coverage, timeline and document-integrity rules",
-            "output": "Structured JSON with sources, model, confidence and human-review status",
-        },
-        "limitations": [
-            "AI findings are decision support only and require human legal review.",
-            "LegalBERT was fine-tuned on synthetic NLI pairs derived from legal text; its score is not a natural legal-contradiction benchmark.",
-            "Scanned PDFs require an OCR backend; the extraction status is shown on each exhibit.",
-        ],
-        "recommendations": recommendations if evidence else [
-            "Upload evidence and run the analysis pipeline to generate findings."
-        ],
-    }
+    from services.report_service import build_explainable_report
+    report = build_explainable_report(
+        case=case,
+        evidence=evidence,
+        documents=documents,
+        doc_entities=doc_entities,
+        all_entities=all_entities,
+        conflicts=conflicts,
+        anomalies=anomalies,
+        party_rows=party_rows,
+        graph=graph,
+        active_models=_active_model_summary(),
+        review_summary=review_summary,
+        reviews=case.get("reviews") or {},
+        pipeline_stages=PIPELINE_STAGES,
+        rgcn_result=rgcn_result,
+    )
 
     results = {"conflicts": conflicts, "anomalies": anomalies, "graph": graph,
                "documents": documents, "entities": all_entities,
@@ -2668,11 +2625,47 @@ async def get_entities(case_id: str, user: dict = Depends(require_user)):
 async def report_meta(case_id: str, user: dict = Depends(require_user)):
     case = _owned_case(case_id, user)
     number = case.get("caseNumber", case_id)
-    return {"url": f"/api/v1/report/{case_id}/content",
-            "filename": f"{_slug(number)}-conflict-report.json"}
+    slug_name = _slug(number)
+    return {
+        "url": f"/api/v1/report/{case_id}/content",
+        "pdfUrl": f"/api/v1/report/{case_id}/pdf",
+        "filename": f"{slug_name}-conflict-report.json",
+        "pdfFilename": f"{slug_name}-conflict-report.pdf",
+    }
 
 
 @app.get("/api/v1/report/{case_id}/content")
 async def report_content(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
     return _ensure_results(case_id)["report"]
+
+
+@app.post("/api/v1/report/{case_id}/regenerate")
+async def report_regenerate(case_id: str, user: dict = Depends(require_user)):
+    """Force re-run of analysis and fresh explainable report assembly."""
+    _owned_case(case_id, user)
+    ANALYSES.setdefault(case_id, {}).pop("results", None)
+    results = _ensure_results(case_id)
+    return results["report"]
+
+
+@app.get("/api/v1/report/{case_id}/pdf")
+async def report_pdf(case_id: str, user: dict = Depends(require_user)):
+    """Generate and return a downloadable, publication-grade PDF report."""
+    case = _owned_case(case_id, user)
+    results = _ensure_results(case_id)
+    report = results.get("report") or {}
+    from services.report_service import render_report_pdf
+    try:
+        pdf_bytes = render_report_pdf(report)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to render PDF: {str(exc)}")
+    number = case.get("caseNumber", case_id)
+    filename = f"{_slug(number)}-conflict-report.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
