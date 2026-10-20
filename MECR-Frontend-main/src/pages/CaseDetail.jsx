@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteEvidence, getCase, runAnalysis, tagEvidence } from '../lib/api'
+import { Badge, Button, Card, Eyebrow } from '../components/ui/Primitives'
+
+export default function CaseDetail() {
+  const { caseId } = useParams()
+  const [caseInfo, setCaseInfo] = useState(null)
+  const [running, setRunning] = useState(false)
+  const [stage, setStage] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  async function load() {
+    try {
+      setCaseInfo(await getCase(caseId))
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  useEffect(() => { load() }, [caseId])
+
+  const people = caseInfo?.people || []
+  const evidence = caseInfo?.evidenceDetail || []
+
+  async function linkPerson(evidenceId, personId) {
+    await tagEvidence(evidenceId, personId)
+    load()
+  }
+
+  async function removeEvidence(id) {
+    await deleteEvidence(id)
+    load()
+  }
+
+  async function handleAnalyze() {
+    setRunning(true)
+    setStage('')
+    try {
+      await runAnalysis(caseId, setStage)
+      await load()
+      navigate(`/cases/${caseId}/analysis`)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  if (error) return <p className="text-conflict text-sm">{error}</p>
+  if (!caseInfo) return <p className="text-textsoft text-sm">Loading case…</p>
+
+  return (
+    <div>
+      <Eyebrow>Case File</Eyebrow>
+      <h1 className="font-serif text-3xl text-ink mb-1">{caseInfo.caseNumber || caseInfo.id}</h1>
+      <p className="text-textsoft text-sm mb-6 flex items-center gap-2">
+        {caseInfo.court} · IPC/BNS {caseInfo.ipcSections || '—'}
+        <Badge tone={caseInfo.status === 'active' ? 'court' : 'gold'}>{caseInfo.status}</Badge>
+      </p>
+
+      <div className="flex gap-3 mb-7">
+        <Button onClick={() => navigate(`/cases/${caseId}/upload`)}>Upload evidence</Button>
+        <Button variant="ghost" onClick={handleAnalyze} disabled={running || evidence.length === 0}>
+          {running ? 'Analyzing…' : 'Run AI analysis'}
+        </Button>
+        <Button variant="ghost" onClick={() => navigate(`/cases/${caseId}/analysis`)} disabled={!caseInfo.analysed}>
+          View analysis
+        </Button>
+      </div>
+
+      {running && (
+        <Card className="mb-6 p-4 text-sm text-textsoft">
+          <span className="font-mono text-[11px] uppercase text-gold mr-2">Pipeline</span>
+          {stage || 'starting…'}
+        </Card>
+      )}
+
+      <div className="grid grid-cols-2 gap-5 mb-6">
+        <Card className="p-5">
+          <h3 className="font-serif font-semibold text-ink mb-3">People ({people.length})</h3>
+          {people.map((p) => (
+            <div key={p.id} className="flex justify-between items-center py-2 border-b border-line last:border-none text-sm">
+              <span>{p.name}</span>
+              <Badge tone={p.role === 'Defendant' ? 'conflict' : 'verified'}>{p.role}</Badge>
+            </div>
+          ))}
+          {people.length === 0 && <p className="text-xs text-textsoft">No people recorded.</p>}
+        </Card>
+
+        <Card className="p-5">
+          <h3 className="font-serif font-semibold text-ink mb-3">Summary</h3>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div><div className="text-textsoft text-xs">Evidence</div><div className="font-mono text-lg">{evidence.length}</div></div>
+            <div><div className="text-textsoft text-xs">Conflicts</div><div className="font-mono text-lg text-conflict">{caseInfo.conflicts}</div></div>
+            <div><div className="text-textsoft text-xs">Anomalies</div><div className="font-mono text-lg text-gold">{caseInfo.anomalies}</div></div>
+            <div><div className="text-textsoft text-xs">Analysed</div><div className="font-mono text-lg">{caseInfo.analysed ? 'Yes' : 'No'}</div></div>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-5">
+        <h3 className="font-serif font-semibold text-ink mb-3">Evidence ({evidence.length})</h3>
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-line">
+              {['ID', 'Name', 'Kind', 'Linked to', ''].map((h) => (
+                <th key={h} className="text-left text-[11px] uppercase tracking-wide text-textsoft font-semibold px-3 py-2.5">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {evidence.map((ev) => (
+              <tr key={ev.id} className="border-b border-line last:border-none">
+                <td className="px-3 py-2.5 font-mono text-[11px] text-gold">{ev.id}</td>
+                <td className="px-3 py-2.5 text-sm text-ink">{ev.name}</td>
+                <td className="px-3 py-2.5"><Badge tone="court">{ev.kind}</Badge></td>
+                <td className="px-3 py-2.5">
+                  <select
+                    className="border border-line rounded-md px-2 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-gold"
+                    value={ev.linkedTo || ''}
+                    onChange={(e) => linkPerson(ev.id, e.target.value)}
+                  >
+                    <option value="">Unlinked</option>
+                    {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </td>
+                <td className="px-3 py-2.5 text-right">
+                  <button onClick={() => removeEvidence(ev.id)} className="text-xs text-textsoft hover:text-conflict">Delete</button>
+                </td>
+              </tr>
+            ))}
+            {evidence.length === 0 && (
+              <tr><td colSpan={5} className="px-3 py-6 text-center text-sm text-textsoft">
+                No evidence yet. <Link to={`/cases/${caseId}/upload`} className="text-gold font-semibold">Upload some</Link>.
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  )
+}

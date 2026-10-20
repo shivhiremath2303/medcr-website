@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #10192A;
+  color: #1B2333;
+}
+
+.tag-highlight { position: relative; padding: 1px 4px; border-radius: 3px; }
+.tag-highlight .lbl {
+  position: absolute; top: -14px; left: 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 8.5px; font-weight: 600;
+}
+
+@media print {
+  aside,
+  .no-print { display: none !important; }
+  main { padding: 0 !important; overflow: visible !important; }
+  body { background: #ffffff; }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.DS_Store
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+__pycache__/
+*.pyc
+training dataset/
+annotations/

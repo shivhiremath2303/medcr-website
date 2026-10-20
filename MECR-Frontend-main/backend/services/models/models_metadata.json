@@ -1,0 +1,457 @@
+{
+  "bilstm_crf": [
+    {
+      "dataset": "sample",
+      "epochs": 3,
+      "accuracy": 32.79,
+      "report": {
+        "B-COURT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "B-DATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 2.0
+        },
+        "B-DEFENDANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "B-EVIDENCE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "B-JUDGE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "B-LAWYER": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "B-PLACE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "I-COURT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 4.0
+        },
+        "I-DATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 7.0
+        },
+        "I-DEFENDANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 2.0
+        },
+        "I-EVIDENCE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 3.0
+        },
+        "I-JUDGE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 2.0
+        },
+        "I-LAWYER": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "I-PLACE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "O": {
+          "precision": 0.4878048780487805,
+          "recall": 0.5714285714285714,
+          "f1-score": 0.5263157894736842,
+          "support": 35.0
+        },
+        "accuracy": 0.32786885245901637,
+        "macro avg": {
+          "precision": 0.03252032520325203,
+          "recall": 0.03809523809523809,
+          "f1-score": 0.03508771929824561,
+          "support": 61.0
+        },
+        "weighted avg": {
+          "precision": 0.2798880447820872,
+          "recall": 0.32786885245901637,
+          "f1-score": 0.30198446937014667,
+          "support": 61.0
+        }
+      },
+      "vocab_size": 200,
+      "num_tags": 18,
+      "samples": 10,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\bilstm_crf_sample.pth",
+      "trained_at": "2026-10-19T18:42:12.899943",
+      "active": false,
+      "activated_at": "2026-10-19T14:15:07.347727+00:00"
+    },
+    {
+      "dataset": "legal_ner_large",
+      "epochs": 8,
+      "accuracy": 94.74,
+      "entity_f1": 0.7159,
+      "vocab_size": 18647,
+      "num_tags": 30,
+      "samples": 9642,
+      "train_samples": 8677,
+      "test_samples": 965,
+      "max_len": 128,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\bilstm_crf_legal_ner_large.pth",
+      "trained_at": "2026-10-20T12:18:29.156216",
+      "active": false
+    },
+    {
+      "dataset": "trainingdatasetv1",
+      "epochs": 8,
+      "accuracy": 96.45,
+      "entity_f1": 0.6797,
+      "vocab_size": 35522,
+      "num_tags": 32,
+      "samples": 12953,
+      "train_samples": 11657,
+      "test_samples": 1296,
+      "max_len": 128,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\bilstm_crf_trainingdatasetv1.pth",
+      "trained_at": "2026-10-20T14:33:11.237503",
+      "active": false
+    },
+    {
+      "dataset": "inlegalner_large",
+      "epochs": 5,
+      "accuracy": 95.07,
+      "entity_f1": 0.7147,
+      "vocab_size": 19726,
+      "num_tags": 30,
+      "samples": 15035,
+      "train_samples": 12035,
+      "test_samples": 3000,
+      "evaluation": "official test.jsonl (held-out documents)",
+      "max_len": 128,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\bilstm_crf_inlegalner_large.pth",
+      "trained_at": "2026-10-20T14:49:13.280088",
+      "active": true,
+      "activated_at": "2026-10-20T09:30:01.495342+00:00"
+    }
+  ],
+  "xgboost": [
+    {
+      "dataset": "sample",
+      "accuracy": 50.0,
+      "roc_auc": 0.5,
+      "report": {
+        "0": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1-score": 0.6666666666666666,
+          "support": 1.0
+        },
+        "1": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        },
+        "accuracy": 0.5,
+        "macro avg": {
+          "precision": 0.25,
+          "recall": 0.5,
+          "f1-score": 0.3333333333333333,
+          "support": 2.0
+        },
+        "weighted avg": {
+          "precision": 0.25,
+          "recall": 0.5,
+          "f1-score": 0.3333333333333333,
+          "support": 2.0
+        }
+      },
+      "samples": 10,
+      "features": [
+        "doc_length",
+        "entity_density",
+        "lawyer_count"
+      ],
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\xgboost_anomaly_sample.json",
+      "trained_at": "2026-10-19T19:47:09.699572",
+      "active": false
+    },
+    {
+      "dataset": "legal_ner_large",
+      "accuracy": 89.88,
+      "precision": 93.28,
+      "recall": 85.94,
+      "f1": 89.46,
+      "roc_auc": 0.9564,
+      "samples": 16000,
+      "features": [
+        "n_chars",
+        "n_words",
+        "n_sentences",
+        "avg_sentence_len",
+        "max_sentence_len",
+        "avg_word_len",
+        "unique_word_ratio",
+        "digit_ratio",
+        "upper_ratio",
+        "punct_ratio",
+        "newline_ratio",
+        "repeat_line_ratio",
+        "legal_kw_count",
+        "legal_kw_ratio",
+        "date_entities",
+        "court_entities",
+        "judge_entities",
+        "party_entities",
+        "lawyer_entities",
+        "statute_entities",
+        "evidence_entities",
+        "entity_count",
+        "entity_density",
+        "type_diversity",
+        "entities_per_sentence"
+      ],
+      "anomaly_definition": "real judgment + simulated document damage (truncation/redaction/entity loss/duplication/boilerplate)",
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\xgboost_anomaly_legal_ner_large.json",
+      "trained_at": "2026-10-20T11:38:11.757070",
+      "active": false
+    },
+    {
+      "dataset": "inlegalner_large",
+      "accuracy": 91.52,
+      "precision": 94.71,
+      "recall": 87.95,
+      "f1": 91.2,
+      "roc_auc": 0.9662,
+      "samples": 21990,
+      "features": [
+        "n_chars",
+        "n_words",
+        "n_sentences",
+        "avg_sentence_len",
+        "max_sentence_len",
+        "avg_word_len",
+        "unique_word_ratio",
+        "digit_ratio",
+        "upper_ratio",
+        "punct_ratio",
+        "newline_ratio",
+        "repeat_line_ratio",
+        "legal_kw_count",
+        "legal_kw_ratio",
+        "date_entities",
+        "court_entities",
+        "judge_entities",
+        "party_entities",
+        "lawyer_entities",
+        "statute_entities",
+        "evidence_entities",
+        "entity_count",
+        "entity_density",
+        "type_diversity",
+        "entities_per_sentence",
+        "ends_complete",
+        "redaction_signals",
+        "placeholder_ratio",
+        "boilerplate_signals",
+        "short_line_ratio"
+      ],
+      "anomaly_definition": "real judgment + simulated document damage (truncation/redaction/entity loss/duplication/boilerplate)",
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\xgboost_anomaly_inlegalner_large.json",
+      "trained_at": "2026-10-20T15:00:33.501732",
+      "active": true,
+      "activated_at": "2026-10-20T09:31:16.452141+00:00"
+    }
+  ],
+  "rgcn": [
+    {
+      "dataset": "sample",
+      "epochs": 30,
+      "accuracy": 100.0,
+      "samples": 10,
+      "train_graphs": 8,
+      "test_graphs": 2,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\rgcn_sample.pth",
+      "trained_at": "2026-10-19T20:04:05.876119",
+      "active": false
+    },
+    {
+      "dataset": "legal_ner_large",
+      "epochs": 40,
+      "accuracy": 77.83,
+      "precision": 81.74,
+      "recall": 86.39,
+      "f1": 84.0,
+      "samples": 18000,
+      "train_graphs": 14400,
+      "test_graphs": 3600,
+      "in_channels": 27,
+      "num_relations": 5,
+      "hidden_channels": 96,
+      "node_features": [
+        "type_COURT",
+        "type_JUDGE",
+        "type_PETITIONER",
+        "type_RESPONDENT",
+        "type_DEFENDANT",
+        "type_WITNESS",
+        "type_LAWYER",
+        "type_DATE",
+        "type_PLACE",
+        "type_EVIDENCE",
+        "type_STATUTE",
+        "type_PROVISION",
+        "type_PRECEDENT",
+        "type_CASE_NUMBER",
+        "type_ORG",
+        "type_PERSON",
+        "type_OTHER",
+        "position_norm",
+        "log_len",
+        "degree_norm",
+        "is_first",
+        "is_last",
+        "type_freq_norm",
+        "graph_size_norm",
+        "edges_per_node_norm",
+        "missing_key_norm",
+        "type_entropy"
+      ],
+      "anomaly_definition": "entity-graph damage: removed metadata, truncation, duplicated scans, boilerplate",
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\rgcn_legal_ner_large.pth",
+      "trained_at": "2026-10-20T12:52:13.130841",
+      "active": false
+    },
+    {
+      "dataset": "inlegalner_large",
+      "epochs": 6,
+      "accuracy": 78.31,
+      "precision": 78.28,
+      "recall": 97.23,
+      "f1": 86.73,
+      "samples": 6937,
+      "train_graphs": 5549,
+      "test_graphs": 1388,
+      "in_channels": 27,
+      "num_relations": 5,
+      "hidden_channels": 96,
+      "node_features": [
+        "type_COURT",
+        "type_JUDGE",
+        "type_PETITIONER",
+        "type_RESPONDENT",
+        "type_DEFENDANT",
+        "type_WITNESS",
+        "type_LAWYER",
+        "type_DATE",
+        "type_PLACE",
+        "type_EVIDENCE",
+        "type_STATUTE",
+        "type_PROVISION",
+        "type_PRECEDENT",
+        "type_CASE_NUMBER",
+        "type_ORG",
+        "type_PERSON",
+        "type_OTHER",
+        "position_norm",
+        "log_len",
+        "degree_norm",
+        "is_first",
+        "is_last",
+        "type_freq_norm",
+        "graph_size_norm",
+        "edges_per_node_norm",
+        "missing_key_norm",
+        "type_entropy"
+      ],
+      "anomaly_definition": "entity-graph damage: removed metadata, truncation, duplicated scans, boilerplate",
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\rgcn_inlegalner_large.pth",
+      "trained_at": "2026-10-20T15:12:54.440758",
+      "active": true,
+      "activated_at": "2026-10-20T09:49:19.218435+00:00"
+    }
+  ],
+  "legalbert": [
+    {
+      "dataset": "sample",
+      "epochs": 3,
+      "accuracy": 67.57,
+      "f1": 0.4032,
+      "samples": 183,
+      "classes": 3,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\legalbert_contradiction_sample",
+      "trained_at": "2026-10-19T20:04:04.702809",
+      "active": false
+    },
+    {
+      "dataset": "legal_nli_large",
+      "base_model": "nlpaueb/legal-bert-small-uncased",
+      "epochs": 2,
+      "accuracy": 71.33,
+      "f1": 0.7144,
+      "samples": 16800,
+      "train_samples": 15000,
+      "test_samples": 1800,
+      "classes": 3,
+      "labels": {
+        "consistent": 0,
+        "contradiction": 1,
+        "neutral": 2
+      },
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\legalbert_contradiction_legal_nli_large",
+      "trained_at": "2026-10-20T12:40:29.881440",
+      "active": false
+    },
+    {
+      "dataset": "legal_claims_large",
+      "base_model": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\legalbert_contradiction_legal_nli_large",
+      "epochs": 1,
+      "accuracy": 98.0,
+      "f1": 0.9803,
+      "samples": 7000,
+      "train_samples": 6000,
+      "test_samples": 1000,
+      "classes": 3,
+      "labels": {
+        "consistent": 0,
+        "contradiction": 1,
+        "neutral": 2
+      },
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\MECR-Frontend-main\\backend\\services\\models\\legalbert_contradiction_legal_claims_large",
+      "trained_at": "2026-10-20T15:23:44.840576",
+      "active": true,
+      "activated_at": "2026-10-20T09:54:00.665577+00:00"
+    }
+  ]
+}

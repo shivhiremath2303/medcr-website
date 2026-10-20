@@ -1,0 +1,11 @@
+{
+  "name": "legal_claims_large",
+  "description": "Legal claim pairs derived from InLegalNER judgments",
+  "labels": {
+    "0": "consistent",
+    "1": "contradiction",
+    "2": "neutral"
+  },
+  "generation": "date/section/outcome/negation edits; re-framed restatements; cross-document unrelated sentences",
+  "format": "jsonl with {premise, hypothesis, label}"
+}

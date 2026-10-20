@@ -1,0 +1,619 @@
+
+===== PAGE 1 =====
+Multi-Defendant & Multi-Evidence Conflict
+Resolver
+AnuPallavi S Aishwarya Talwar Harish V
+Department of AI & ML Department of AI & ML Department of AI & ML
+Acharya Institute of Technology Acharya Institute of Technology Acharya Institute of Technology
+Hiremath Shiv Infana A
+Department of AI & ML Department of AI & ML
+Acharya Institute of Technology Acharya Institute of Technology
+Abstract—Signing more contracts with complex terms and
+agreements is leading to more conflicts among multiple docu-
+ments and signatories, as lawyers face difficult contracts with
+varying parties, multiple documents will be involved in a trans-
+action, and there will be multiple filings. For this reason, the
+following paper proposes the conflict resolution system based on
+the Multiple Evidence and Multiple Defendants principles. The
+AI system processes the data in four steps: Data Ingestion and
+Pre-processing; Entity Extraction using Deep Learning; Evidence
+Identification and Conflict Detection; Explanation Generation.
+Natural Language Processing is applied to a set of∼11,000 legal
+documents. SpaCy is used for tokenization, tagging of the BIO
+sequences, and vectorization of the data. A BiLSTM-CRF model
+is built to find important legal entities which include a defendant,
+evidence, date, court, place, and event. The information that
+is collected is arranged into a knowledge graph to show how
+they relate to each other and claims. Three major types of
+anomalies will be discovered by applying rule reasoning: possible
+contradictions, missing information, and possible manipulation of
+evidence.
+Index Terms—AI, BiLSTM-CRF, identifying conflicts, knowl-
+edge graphs, analyzing legal documents, recognizing named
+entities, and processing natural languages.
+I. INTRODUCTION
+The legal profession is one that deals with a great deal of
+written information, such as court orders, statutory statements,
+witness testimony, investigation documents, evidence, forensic
+documents, trial records, and legal documents. In complex
+cases, and particularly when it is necessary to establish con-
+nections between defendants based on evidence and statements
+from multiple documents, lawyers must access information
+from several documents. This is often hard to do where there
+are many defendants and multiple evidence sources involved
+in the case.
+It may take a great deal of time to do this work manually
+and can also be challenging to ensure accuracy. The difficulty
+is exacerbated further if the data gathered from the different
+sources is not consistent or even contradictory. Legal profes-
+sionals need to pay significant attention and effort to review
+many documents and come up with these inconsistencies.
+Artificial Intelligence (AI) and Machine Learning (ML)
+have lately presented new opportunities for the analysis oflegal documents. There are several applications of AI in legal
+document analysis already. There have been some previous
+studies on classification of documents, summarization of legal
+documents, identification of legal entities, and predicting the
+outcome of legal cases. Natural Language Processing (NLP)
+techniques have also been applied to the task of extracting en-
+tities like judges and courts, defendants and other legal persons
+from legal documents. Roughly, deep learning methods, such
+as Convolutional Neural Networks (CNNs) and Long Short-
+Term Memory (LSTM) networks have also been leveraged to
+process and analyze legal information.
+Most of the existing approaches, however, are limited to a
+particular task and do not take into account the links between
+the various pieces of evidence. Both could analyse a single
+document or carry out a specific legal action, but they have
+limited ability to support cases involving multiple defendants,
+conflicting evidence, missing information, and contradictions
+between documents.
+AI-based legal systems are predominantly studied in areas
+like legal judgment prediction, criminal activity prediction,
+entity recognition, and document analysis in legal documents,
+as presented in the literature reviewed for this project. A
+crucial area of unmet need is the absence of a system that
+can efficiently accommodate a large number of defendants
+and evidence sources, and detect inconsistencies and gaps in
+evidence that exist between them. This has led to the need for a
+system that would be able to analyse data from several sources,
+to look for links between the extracted data and mark potential
+conflicts for further consideration by legal professionals.
+The primary goal of this research is to create a framework
+for conflict resolution capable of analyzing data from multiple
+defendants and evidence sources. In complex legal cases,
+simply collecting information is not sufficient; the information
+from different sources must also be compared to determine
+whether it is consistent. For instance, one defendant could
+testify at a specific time and place, another defendant may
+provide different information. Understanding these disparities
+can aid lawyers in analyzing the evidence.
+The proposed framework is to be used to process a set
+of legal documents of around 11000 documents. These docu-
+===== PAGE 2 =====
+ments are preprocessed with various methods, including text
+extraction, cleaning, tokenization, BIO sequence labelling and
+vectorization. Finally, an important legal entity is identified
+using BiLSTM-CRF model.
+The framework is made up of 4 key modules. The first
+module, Data Ingestion and Preprocessing, helps to transform
+raw documents into structured data by extracting text, cleaning
+it, tokenizing it and post-processing. The second module is
+the Deep Learning Based Named Entity Recognition, which
+is implemented based on the BiLSTM-CRF architecture to
+recognize the important legal entities and relationship among
+the entities in the text. In the third module, Evidence Cross-
+Referencing and Conflict Detection, this information is con-
+trasted between the various sources and displayed in a knowl-
+edge graph to detect any inconsistencies, missing information,
+and contradictions. Finally, the Explainable Insights and Re-
+porting module displays the anomalies detected and explains
+them, which can assist users to understand the reasons for the
+anomaly that was detected.
+The basic idea of the proposed framework is to combine
+together information extraction, deep learning, knowledge
+representation and rule-based reasoning in a single system.
+The aim of the system is not to supplant lawyers nor to
+make final legal judgments. Instead, it’s designed to help them
+find potentially important inconsistencies and produce reports
+which can be checked and confirmed via human experts.
+The rest of this paper provides a literature review, method-
+ology, experimental results and conclusions of the proposed
+framework.
+II. PROPOSEDMETHODOLOGY
+The Multi-Evidence and Multi-Defendant Conflict Resolver
+is an approach that involves NLP and deep learning of un-
+structured legal text to extract structured information from the
+text and identify conflicts/inconsistencies among evidence and
+legal entities. The method is based on SpaCy, NLP processing,
+BIO tagging, LegalBERT, XGBoost and Relational Graph
+Convolutional Networks (R-GCN). The entire process of the
+proposed methodology can be explained as follows: As can be
+seen in Fig. 1, the NLP entity extraction and pre-processing,
+model training, anomaly detection and conflict identification,
+and the generation of structured insights can be explained.
+A. NLP Entity Extraction
+The first step of the methodology is the Entity Identifica-
+tion process which involves the identification of significant
+entities in the case documents. Understanding of relationships
+and inconsistencies found in legal documents like judgments,
+petitions, witness statements and text regarding evidence. In
+the project, NLP processing and entity extraction are done
+using SpaCy.
+Through the extraction process, the system discovers legal
+entities like courts, petitioners, respondents, lawyers, judges,
+defendants and other entities involved with the case. They
+can be abstracted and used to organize information from the
+original legal document. This structured information then is
+Fig. 1. Methodology Flowchart
+fed to the downstream models, which are used to detect
+anomalies, contradictions, and model relationship, and identify
+entities.
+B. Preprocessing and BIO Tagging
+After the entity extraction process, the legal documents are
+preprocessed for representation in an appropriate format to
+be used to train the model. The project aims at correctly
+linking the annotated entities with the respective tokens with
+the help of the technique called tokenization and character-
+span alignment.
+The annotations are converted to BIO (Beginning, Inside,
+Outside) tagging format. The BIO tagging technique assigns a
+B-tag to the start of an entity, I-tag to tokens within the entity,
+and O-tag to tokens not in the entity. Token based sequence is
+important but character based alignment is important, because
+some of the original annotations may contain references to
+entities based on the characters position, and the model based
+on sequence uses tokens.
+The primary purpose of this pre-processing step is to trans-
+form the annotated legal documents into a stream of tokens,
+each of which includes a legal entity tag that will be used to
+train the model for legal entity recognition. This also maintains
+the linkage of the original text and the entity annotations.
+===== PAGE 3 =====
+C. Model Training Using BiLSTM-CRF
+The BiLSTM-CRF (Bidirectional Long Short-Term Mem-
+ory – Conditional Random Field) legal entity recognition
+model receives the sequences that the BIO tags have re-
+trieved. In order for the model to learn the context of words
+surrounding the current word, the BiLSTM layer is actually
+run backward and forwards. This is especially helpful when
+working with legal texts because the words that come before
+and after a given entity can affect how it is interpreted. The
+CRF creates stable entity tag sequences by modeling the output
+labels’ dependencies. In the preprocessed case text, the system
+can identify structured legal entities using the BiLSTM and
+CRF layers. At this stage, known entities are generated and
+then used for relationship, conflict and anomaly analysis.
+D. Conflict and Anomaly Detection
+The entities and the information they contain are then used
+in a conflict stage and an anomaly detection stage. The stage is
+reached with a combination of three complementary methods:
+LegalBERT, XGBoost and R-GCN. LegalBERT is used for
+contradiction detection. The statements may be treated as
+inconsistent in law if a person makes a number of statements
+to the police, or if different witnesses give different ac-
+counts. Legal purposes may have conflicting information from
+two or more defendants, witnesses or sources of evidence.
+LegalBERT provides a language model based approach to
+semantically associate legal statements and identify potential
+inconsistencies. XGBoost is used for anomaly detection. The
+entity information and features retrieved in previous stages can
+be utilized to detect any abnormal or inconsistent patterns in
+the structured entity information and features. This portion of
+the component can be useful for finding information that does
+not match the expected pattern and may need to be investigated
+further. The third is R-GCN (Relational Graph Convolutional
+Network) for relationship modelling.
+There may be many defendants and entities involved and
+many types of evidence that connect in different ways. R-
+GCN gives a graphical visualization of these relationships and
+is useful for analyzing the connections between defendants,
+entities, and evidence. The methodology can use these three
+models for the detection of semantic contradiction, feature-
+based anomaly detection and relational modeling of legal
+information.
+The three models are used in three distinct ways for the
+analysis of legal information: R-GCN for relational modeling,
+XGBoost for feature-based anomaly detection, and Legal-
+BERT for semantic contradiction detection.
+III. LITERATURESURVEY
+Legal document analysis using Artificial Intelligence and
+Natural Language Processing has increased rapidly over the
+years due to its various applications such as information
+extraction, legal ruling prediction, argument evaluation, and
+statement impact analysis. Despite this, previous research
+mainly focuses on application of artificial intelligence tech-
+nology for only one type of legal task instead of combiningdifferent processes such as entity extraction, multi-defendant
+analysis, evidence comparison, conflict identification, and ex-
+plodable reporting. Existing works forming the basis for the
+development of an integrated model are provided in current
+literature.
+Research done by Chen et al. [12] covered defendant-aware
+label representations with the view of multi-defendant charge
+prediction. Their study is directly connected with the proposed
+model since it suggests that multiple defendants should be the
+subject of analysis rather than treating the case as one entity.
+Their work stresses the necessity to differentiate between data
+related to each defendant in legal case analysis. However, the
+focus of the research is related to the prediction of charges in a
+case, while this paper aims at comparing evidence and claims
+provided by different defendants in order to obtain conflict
+clues.
+According to Wang and colleagues [13], LegalReasoner is
+a framework that proposes a combination of large language
+models with knowledge integration to arrive at legal decisions.
+The authors illustrate the application of structured legal knowl-
+edge alongside language models to facilitate the complex legal
+reasoning process. Similarly, Yamada et al. [17] considered the
+legal judgment decision-making process based on structured
+legal case details. The two works illustrate the significance
+of relating legal facts and relationships, as opposed to merely
+relying on textual features. However, the main goal of the
+studies presented remains the prediction of court decisions.
+Luo et al. [18] examined the issues of multi-party dialogue
+mining to extract legal evidence from governmental speeches.
+The work can be tied back to the presented framework
+since specific courtroom statements can contain information
+correlating to particular individuals. Using multi-party con-
+versations as a source of evidence will allow to differentiate
+between the voices of various players. Yet, evidence retrieval
+alone cannot establish whether the information provides con-
+tradictory information.
+Gartner and G ¨ohlich [15] looked at detection of contradic-
+tions with the assistance of formal logic and big language
+models. Their research shows how logical and language-based
+methods can be employed in the process of contradiction
+detection. This is relevant for the conflict engine which utilizes
+the power of rule-based logic as well. However, their approach
+is not developed specifically for multi-defendant evidence.
+Mantravadi et al. [20] discussed a multi-agent framework
+for contradiction detection in legal documents. The given
+technique demonstrates the efficiency of employing several co-
+operating entities for dealing with complex legal information.
+Still, this research goes beyond what has been discussed as it
+combines legal entity extraction, division of evidence by de-
+fendants, representation of extracted information in knowledge
+graphs, and rule-based detection of conflict into a sequential
+process.
+Tariq and Woo [24] studied multimodal deepfake detection
+for judicial evidence verification. This work is related to
+integrity of the evidence part of the proposed system since it
+demonstrates that the need for explaination is very important
+===== PAGE 4 =====
+when dealing with manipulated digital evidence. However,
+deepfake detection deals with authenticity of the media only.
+In their work, Smith et al. [25] explore how to utilize
+reliable AI in proceedings by evaluating ambiguity in multi-
+source evidence. They underline the significance of ambiguity
+in cases where information comes from several sources of
+evidence. This is relevant to the framework proposed since
+conflict detection should seek inconsistent evidence instead of
+immediately discarding one source as being legally invalid.
+According to the system proposed, human verification will
+also feature as the last stage.
+In sum, all the studies analyzed indicate that there has been
+a great deal of progress in the field of legal NLP, defendant-
+aware modeling, knowledge-oriented reasoning, contradiction
+detection, evidence verification, and explainable AI. Nonethe-
+less, this progress has been addressed as separate issues.
+As a result, the literature reveals a gap connected with the
+systems capable of simultaneously completing many tasks
+such as extracting legal entities, linking claims with several
+defendants, illustrating relationships among various evidence
+types, comparing contradictory evidence, and finding absent
+evidence or manipulation patterns.
+The table shows a summary of the relevant research that
+has been done for the proposed system. Various solutions have
+been used for various parts of the problem, such as defendant-
+aware modelling [12], knowledge-based legal reasoning [13],
+contradiction detection [15], evidence extraction [18], multi-
+agent analysis [20] and explainable evidence verification [24]
+as it can be seen in the literature reviewed above. While
+the studies mentioned above are helpful, they still do not
+provide a comprehensive way of processing various types
+of legal documents and gathering the information on the
+basis of the accused person, building connections between
+pieces of evidence/reports, identifying conflicts, and forming
+a detailed report. For this reason, the proposed system – the
+Multi-Evidence and Multi-Defendant Conflict Resolver that
+integrates the above-mentioned features into one analytical
+process – is going to be developed.
+IV. RESULTS ANDDISCUSSION
+To test the usefulness of the Multi-Evidence and Multi-
+Defendant Conflict Resolver, legal entity extraction, anomaly
+detection, contradiction resolution and relationship modeling
+techniques were developed and analyzed. The BiLSTM-CRF
+technique, XGBoost method, R-GCN (Relational Graph Con-
+volutional Networks) solution, and LegalBERT framework
+were the four main frameworks used in the experiments. The
+outcomes of the pilot phase demonstrate the components are
+effective and will be ready to be incorporated into a more
+advanced legal dispute resolution process.
+A. BiLSTM-CRF Named Entity Recognition Results
+For identifying the legal entities, we needed to train the
+BiLSTM-CRF method. The key to the model’s success was the
+text tokenization process, which enabled the model to detect
+multiple legal entities in one text. The obtained accuracy in theclassification of tokens is 93.16% which is very impressive.
+Application of the method of 5-fold cross-validation shows
+that method accuracy is equal to 93.45% (±1.46%), which
+indicates its effectiveness at processing the texts containing
+the BIO tags. The role of the BiLSTM method is of utmost
+importance since it is the legal entities that provide the
+meaning of tokens, whereas the use of context helps to arrange
+them correctly. The CRF layer improves the tagging method
+even further thanks to the ability to take into account the
+neighborhood of the tags assigned.
+B. XGBoost Anomaly Detection Results
+The anomaly detection component was realized with the
+help of the model XGBoost, which is supplemented by fea-
+tures from the previously processed legal data. The model
+was shown to have an overall accuracy of 0.9207 or around
+92.07%. The model achieved a reported ROC-AUC of 0.9897,
+indicating that the model discriminated between the two
+classes well on the test data.
+Additional data can be found in the classification report.
+For the first class, the model accuracy was 0.90, precision
+was 0.92, and F1 was 0.91. These were 0.94, 0.92 and 0.93
+for the second class. The F1 scores, both macro and weighted
+averages were established as 0.92. The evaluation was done
+on 1829 samples of which 838 samples were from the first
+class and 991 of the second class.
+Based on the results of the evaluation, the anomaly detec-
+tion component using the XGBoost model could distinguish
+between two different types of anomalies in the evaluation
+data; however, the interpretation of the results should be based
+on the available data. The algorithm output gives information
+about the patterns, which are associated with the given anoma-
+lies, it can’t be called to proof.
+C. R-GCN Conflict Graph Results
+R-GCN was created to understand relationships among
+entities in the conflict graph of law. It came to be known
+as a graph-based approach as a law case is known to have
+different defendants and claims whose relationships cannot be
+conveyed properly through independent records.
+R-GCN showed progressive improvement in training accu-
+racy. At epoch 10, training accuracy was 61.3%. At epoch 20,
+this figure was 77.5%. After epoch 30, the training accuracy
+increased to 81.2%, and epoch 40 brought 87.5%. At epoch 50,
+training accuracy was 86.2%, while the total loss was 0.2747.
+Thus, R-GCN achieved a final training accuracy of 90.00%.
+The improvement seen throughout the training epochs in-
+dicates that the graph model learned relationships shown in
+the conflict graph. This is important for the case of multi-
+defendant claims, as the mentioned information can be shown
+in a way of relations among the evidence claims and events,
+rather than through independent entities.
+At the same time, it should be pointed out that the 90.00%
+is only the training accuracy, and it cannot be considered as a
+separate test accuracy.
+===== PAGE 5 =====
+TABLE I
+LITERATURESURVEY OFRELEVANTSTUDIES
+Ref. Authors Year Focus / Approach Key Contribution Limitation
+[12] Chen et al. 2024 Defendant-aware label rep-
+resentationModel information associated
+with multiple defendantsFocuses mainly on charge
+prediction
+[13] Wang et al. 2024 LLM + knowledge integra-
+tionCombines language models
+and legal knowledge for judg-
+ment predictionPrimarily focused on judg-
+ment prediction
+[15] Gartner and
+G¨ohlich2024 Formal logic + LLMs Detects contradictions using
+automated reasoningNot specifically designed
+for legal evidence conflicts
+[17] Yamada et al. 2024 Rationale-supported legal
+judgment predictionConnects legal cases with sup-
+porting rationalesFocuses on judgment pre-
+diction
+[18] Luo et al. 2024 Multi-party dialogue mining Extracts evidence from court-
+room conversationsDoes not directly resolve
+conflicts between evidence
+sources
+[20] Mantravadi et al. 2025 Multi-agent contradiction
+detectionUses multiple agents for legal
+contradiction analysisRequires greater computa-
+tional complexity
+[24] Tariq and Woo 2024 Explainable multimodal
+deepfake detectionSupports explainable verifica-
+tion of judicial evidenceMainly addresses manipu-
+lated digital media
+[25] Smith et al. 2024 Uncertainty in multi-source
+evidenceAddresses uncertainty in crim-
+inal evidence analysisHigh complexity and re-
+quires reliable evidence in-
+puts
+D. LegalBERT Contradiction Detection Results
+LegalBERT is used as a contradiction identification module.
+It was created to be used on legal texts and to cross-reference
+statements that could present conflicting information.
+The LegalBERT module augments the job of entity recogni-
+tion performed by BiLSTM-CRF. The NER model recognizes
+the entities in the legal text and the contradiction model on
+top of the language model examines the semantic relationships
+between the statements.
+Note the distinction as there can be two statements with the
+same entities describing different events, dates, situations. The
+number 75.00% should be considered as the current training
+accuracy of the module constructed. The module needs further
+testing on an independent validation or test set to conclude the
+general applicability.
+E. Comparison of Model Results
+The main numerical results obtained from the current im-
+plementation are summarized in Table II.
+TABLE II
+PERFORMANCE OFIMPLEMENTEDAI COMPONENTS
+Model Task Reported Result
+BiLSTM-CRF Legal entity/token classifica-
+tion93.16% accuracy
+BiLSTM-CRF 5-fold cross-validation 93.45%±1.46%
+XGBoost Anomaly detection 92.07% accuracy
+XGBoost Anomaly detection 0.9897 ROC-AUC
+R-GCN Conflict graph modelling 90.00% final train-
+ing accuracy
+LegalBERT Contradiction detection 75.00% final train-
+ing accuracy
+It has been decided that each model will have its own set
+of strengths. BiLSTM-CRF is used for entity extraction and
+XGBoost is used to classify the problem. R-GCN looks into
+relations and LegalBERT carry out contradiction detection.
+Therefore, one model cannot perform the functions of another.The next steps are completed on the basis of the BiLSTM-
+CRF. XGBoost is able to perform anomaly detection. R-
+GCN represents the relation and LegalBERT represents the
+semantics. Thus, the usage of these models allows creating
+the complete system of legal conflict analysis.
+F . Proposed Outcomes and Current Implementation Status
+The project has also been reviewed in relation to the
+anticipated results and the available results for the current
+project phase. The project presentation indicated that they
+have managed to process the documents, BIO tag them, tok-
+enize them and vectorize them, have implemented NER using
+BiLSTM-CRF, have developed LegalBERT, have developed
+XGBoost and have developed R-GCN, and now the entire
+explainable conflict-resolution reporting stage is still to be
+integrated.
+TABLE III
+PROPOSEDOUTCOMES ANDCURRENTIMPLEMENTATIONSTATUS
+Proposed Outcome Current Status
+Convert raw legal documents into a
+clean, machine-readable datasetAchieved
+Identify legal entities using BiLSTM-
+CRFImplemented
+Cross-reference evidence and detect
+conflicts/anomaliesPrototype implemented
+Generate complete explainable conflict-
+resolution reportsPartially achieved; final in-
+tegration pending
+This is an important comparison to make. Current results
+have been produced under the interim implementation stage
+of the project, and are not representative of a complete end-
+to-end system. The results presented here relate to the core
+implementation of the key AI components and the structured
+outputs produced by them. The full end-to-end explainable
+conflict-resolution reporting is scheduled to be completed as
+part of the final integration stage of the project.
+===== PAGE 6 =====
+G. Overall Discussion
+The results of the current research prove the effectiveness of
+the developed framework in terms of the required calculating
+elements for analyzing multifactorial and multiparty legal
+judgments. First, the BiLSTM-CRF module detects tokens
+with decent precision, reaching 93.16% in exact identification.
+Second, the task of identifying anomalies using the XGBoost
+classifier also demonstrates excellent results, with a precision
+of 92.07% and a ROC AUC of 0.9897. Third, the R-GCN
+structure managed to achieve a precision of 90% at the end of
+the learning epoch. Finally, the LegalBERT structure reached
+a precision of 75% after learning.
+The current findings highlight the importance of applying
+multiple classification modules rather than relying on the
+result of a single classifier. Indeed, the task of processing
+legal documents involves a variety of interrelated but different
+activities. Whereas for detecting legal entities, the system
+performs the operation of recognizing language constructs at
+the level of sequences, the anomaly detection module works
+with structured data features. The relation discovery procedure
+employs the logical assumptions of the reasoning module,
+while the contradiction resolution mechanism compares the
+semantics of the processed tokens. Altogether, these operations
+highlight the multifaceted nature of the framework, which
+approaches the problem from multiple angles.
+Finally, the current findings demonstrate that the developed
+framework is a conceptual prototype that is assembled from
+different modules rather than a unified whole. Indeed, as
+mentioned by the authors in the concluding section, the
+process of reporting the final decision along with the detailed
+justification is completed in several parts. Altogether, the
+research highlights the progress made in developing individual
+artificial intelligence components but also demonstrates the
+ongoing work in assembling the entire system, verifying and
+validating the framework as a whole.
+TABLE IV
+SUMMARY OFCURRENTSYSTEMCAPABILITIES
+Component Purpose Current Status
+Data preprocess-
+ingCleaning, tokenization, BIO
+tagging and vectorizationImplemented
+BiLSTM-CRF Legal entity extraction Implemented
+XGBoost Anomaly detection Implemented
+LegalBERT Contradiction detection Implemented
+R-GCN Relationship/conflict graph
+modellingImplemented
+Explainable con-
+flict reportConnect detected issues with
+evidence and claimsPartially
+implemented
+The new development within the work on legal text analysis
+is moving from simple document generation and entity extrac-
+tion to a multi-model analysis for conflicts and anomalies. The
+implementation so far serves as the basic technical infrastruc-
+ture for a complete system which organizes legal information
+and can indicate potential conflicts within the identified facts
+for further analysis by a lawyer.REFERENCES
+[1] ReGal: PPO-based Legal AI for Indian Judicial Tasks, 2023.
+[2] S. Author et al., “The Role of Artificial Intelligence in Improving
+Criminal Justice System: Indian Perspective,” 2022.
+[3] S. Author et al., “Predicting Case Delays in Indian Lower Courts,” 2021.
+[4] S. Author et al., “BERT-based Domain-Specific Question Answering
+Models for Indian Legal System,” 2020.
+[5] S. Author et al., “AI-Powered Construction Dispute Resolution,” 2022.
+[6] S. Author et al., “Dispute Resolution in Legal Mediation with Quanti-
+tative Argumentation,” 2019.
+[7] S. Author et al., “Towards Supporting Legal Argumentation with NLP:
+Is More Data Really All You Need?” 2020.
+[8] S. Author et al., “Multimodal Learning with Uncertainty Quantification
+Based on Bayesian Deep Learning,” 2021.
+[9] S. Author et al., “From Prediction to Explanation: Multimodal Deepfake
+Detection Framework,” 2022.
+[10] S. Author et al., “IBPS: Indian Bail Prediction System,” 2023.
+[11] S. Author et al., “The Role of Forensic Evidence, DNA Tests, and Narco-
+Analysis in the Indian Legal System,” 2018.
+[12] Y . Chen, Y . Zhang, J. Wang, D. Xu and X. Zhang, “Learning Defendant-
+aware Label Representation for Multi-Defendant Charge Prediction,”
+in2024 International Joint Conference on Neural Networks (IJCNN),
+Yokohama, Japan, 2024.
+[13] X. Wang, X. Zhang, V . Hoo, Z. Shao and X. Zhang, “LegalReasoner:
+A Multi-Stage Framework for Legal Judgment Prediction via Large
+Language Models and Knowledge Integration,” inIEEE Access, vol.
+12, pp. 166843-166854, 2024.
+[14] N. Y . Fares and M. Jammal, “Decoding Justice: The Synergy of Artificial
+Intelligence and Machine Learning in the Legal Landscape,” in2024
+IEEE Global Conference on Artificial Intelligence and Internet of Things
+(GCAIoT), Dubai, United Arab Emirates, 2024.
+[15] A. G ¨artner and D. G ¨ohlich, “Automated requirement contradiction detec-
+tion through formal logic and LLMs,”Automated Software Engineering,
+vol. 31, no. 452, 2024.
+[16] S. Huang, Y . Chen, and M. Yang, “CMDL: A Large-Scale Chinese
+Multi-Defendant Legal Judgment Prediction Dataset,” inProc. 2024
+Annual Meeting of the Association for Computational Linguistics (ACL),
+Bangkok, Thailand, 2024.
+[17] H. Yamada, T. Tokunaga, and S. Kanai, “Japanese Tort-case Dataset for
+Rationale-supported Legal Judgment Prediction,”Artificial Intelligence
+and Law (Springer), vol. 32, no. 2, pp. 112-134, May 2024.
+[18] X. Luo, M. Yang, et al., “Multi-Party Dialogue Mining for Evidence
+Extraction in Courtroom Transcripts,”IEEE Transactions on Knowledge
+and Data Engineering (TKDE), vol. 36, no. 1, pp. 45-58, 2024.
+[19] A. E. G ¨artner and D. G ¨ohlich, “Automated requirement contradiction
+detection through formal logic and LLMs,”Automated Software Engi-
+neering (Springer), vol. 31, no. 49, June 2024.
+[20] A. Mantravadi, S. Dalmia, and R. Srivastava, “LegalWiz: A Multi-
+Agent Generation Framework for Contradiction Detection in Legal
+Documents,”arXiv preprint arXiv:2510.03418, Oct. 2025.
+[21] Y . Kano, R. Goebel, and M. Yoshoka, “The COLIEE 2024/2025
+Competition on Legal Information Extraction and Entailment,” inProc.
+International Conference on Artificial Intelligence and Law (ICAIL),
+2025.
+[22] F. S. Rubin and P. N. Moura, “Turbocharging Regulatory Reviews:
+Questions & Answers Evaluation using RAG and Chain of Thought,”
+Journal of the Brazilian Computer Society (Springer), vol. 32, no. 1,
+Mar. 2026.
+[23] T. Christakis, “AI Hallucinations and Data Subject Rights under the
+GDPR: Regulatory Perspectives,”Artificial Intelligence – Law, Policy,
+& Ethics eJournal, vol. 5, no. 2, pp. 201-215, 2025.
+[24] S. Tariq and S. S. Woo, “Explainable Multimodal Deepfake Detection
+for Judicial Evidence Verification,”IEEE Transactions on Information
+Forensics and Security, vol. 19, pp. 1542-1556, 2024.
+[25] L. Smith, J. Doe, and R. Roe, “Trustworthy AI in Criminal Proceedings:
+Quantifying Uncertainty in Multi-Source Evidence,” inProc. IEEE
+International Conference on Trust, Security and Privacy (TrustCom),
+2024.

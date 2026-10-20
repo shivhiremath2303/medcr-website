@@ -1,0 +1,13 @@
+{
+  "name": "legal_nli_large",
+  "source": "stanfordnlp/snli",
+  "license": "CC-BY-SA-4.0",
+  "task": "natural language inference / contradiction detection",
+  "labels": {
+    "0": "consistent",
+    "1": "contradiction",
+    "2": "neutral"
+  },
+  "train_records": 15000,
+  "test_records": 3000
+}

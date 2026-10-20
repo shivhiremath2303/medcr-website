@@ -1,0 +1,27 @@
+{
+  "name": "legal_ner_large",
+  "source": "AjayMukundS/Indian_Legal_NER_Dataset",
+  "license": "MIT",
+  "task": "legal named-entity recognition",
+  "records": 9642,
+  "splits": [
+    "train",
+    "validation"
+  ],
+  "entity_types": [
+    "CASE_NUMBER",
+    "COURT",
+    "DATE",
+    "GPE",
+    "JUDGE",
+    "LAWYER",
+    "ORG",
+    "OTHER_PERSON",
+    "PETITIONER",
+    "PRECEDENT",
+    "PROVISION",
+    "RESPONDENT",
+    "STATUTE",
+    "WITNESS"
+  ]
+}

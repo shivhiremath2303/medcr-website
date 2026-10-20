@@ -1,0 +1,28 @@
+{
+  "name": "inlegalner_large",
+  "description": "Indian legal NER corpus (InLegalNER) with official train/dev/test splits",
+  "source": "InLegalNER, IIT Kharagpur / Kaggle",
+  "license": "CC BY-NC-SA 4.0 (research use)",
+  "labels": [
+    "COURT",
+    "JUDGE",
+    "PETITIONER",
+    "RESPONDENT",
+    "WITNESS",
+    "LAWYER",
+    "DATE",
+    "PLACE",
+    "STATUTE",
+    "PROVISION",
+    "PRECEDENT",
+    "CASE_NUMBER",
+    "ORG",
+    "PERSON"
+  ],
+  "documents": {
+    "train": 10995,
+    "dev": 1074,
+    "test": 4501
+  },
+  "format": "jsonl with {text, entities:[{start,end,label}]}"
+}

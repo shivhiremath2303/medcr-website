@@ -1,0 +1,122 @@
+[
+  {
+    "text": "In The High Court Of Kerala At Ernakulam, Crl MC No. 1622 of 2006, the petitioner T.R. Ajayan, S/O O. Raman submitted a forensic report referencing CCTV footage timestamped 22:14 as contradicting the statement given by respondent K. Balan, who claimed presence at a separate location supported by a fuel receipt dated the same evening.",
+    "entities": [
+      {"start": 8, "end": 42, "label": "COURT"},
+      {"start": 45, "end": 70, "label": "DATE"},
+      {"start": 75, "end": 100, "label": "DEFENDANT"},
+      {"start": 101, "end": 114, "label": "WITNESS"},
+      {"start": 141, "end": 172, "label": "EVIDENCE"},
+      {"start": 173, "end": 185, "label": "DATE"},
+      {"start": 210, "end": 218, "label": "DEFENDANT"},
+      {"start": 260, "end": 298, "label": "EVIDENCE"}
+    ],
+    "source": "sample_case_1.json",
+    "kind": "text"
+  },
+  {
+    "text": "The Hon'ble Justice Menon presided over the hearing at the Supreme Court of India on 15th August 2024. Advocate R. Krishnan represented the defendant A. Kumar in the matter.",
+    "entities": [
+      {"start": 12, "end": 27, "label": "JUDGE"},
+      {"start": 61, "end": 84, "label": "COURT"},
+      {"start": 87, "end": 107, "label": "DATE"},
+      {"start": 115, "end": 135, "label": "LAWYER"},
+      {"start": 140, "end": 156, "label": "DEFENDANT"}
+    ],
+    "source": "sample_case_2.json",
+    "kind": "text"
+  },
+  {
+    "text": "Defendant A. Kumar was officially documented at location X at exactly 9 PM on the evening of 12th March. Defendant B states on the record Defendant A was at location Y at 9 PM on 12th March.",
+    "entities": [
+      {"start": 0, "end": 9, "label": "DEFENDANT"},
+      {"start": 10, "end": 18, "label": "DEFENDANT"},
+      {"start": 61, "end": 74, "label": "PLACE"},
+      {"start": 79, "end": 88, "label": "DATE"},
+      {"start": 122, "end": 131, "label": "DEFENDANT"},
+      {"start": 146, "end": 154, "label": "DATE"},
+      {"start": 160, "end": 173, "label": "PLACE"}
+    ],
+    "source": "sample_case_3.json",
+    "kind": "text"
+  },
+  {
+    "text": "The written contract clearly states a mandatory 30-day legal notice period is strictly required. The agreement allows for immediate termination without warning at any time.",
+    "entities": [
+      {"start": 34, "end": 43, "label": "DATE"},
+      {"start": 79, "end": 87, "label": "DATE"}
+    ],
+    "source": "sample_case_4.json",
+    "kind": "text"
+  },
+  {
+    "text": "Witness S. Nair states that on the evening of the incident K. Balan was near the market until about 22:05. The witness does not mention the fuel station and cannot confirm the 22:20 sighting claimed in the receipt.",
+    "entities": [
+      {"start": 8, "end": 16, "label": "WITNESS"},
+      {"start": 66, "end": 74, "label": "DEFENDANT"},
+      {"start": 101, "end": 109, "label": "PLACE"},
+      {"start": 114, "end": 123, "label": "DATE"},
+      {"start": 206, "end": 215, "label": "DATE"},
+      {"start": 258, "end": 267, "label": "EVIDENCE"}
+    ],
+    "source": "sample_case_5.json",
+    "kind": "text"
+  },
+  {
+    "text": "The fuel receipt dated the same evening was produced by K. Balan as evidence of his presence at the fuel station, but the signature block on the receipt shows signs of digital manipulation.",
+    "entities": [
+      {"start": 4, "end": 17, "label": "EVIDENCE"},
+      {"start": 88, "end": 96, "label": "DEFENDANT"},
+      {"start": 126, "end": 134, "label": "EVIDENCE"},
+      {"start": 139, "end": 152, "label": "PLACE"},
+      {"start": 197, "end": 211, "label": "EVIDENCE"}
+    ],
+    "source": "sample_case_6.json",
+    "kind": "text"
+  },
+  {
+    "text": "CCTV footage EV-0114 shows the accused at the crime scene at 22:14, contradicting the alibi provided by the defense lawyer Adv. P. Sharma who claimed the accused was elsewhere.",
+    "entities": [
+      {"start": 0, "end": 13, "label": "EVIDENCE"},
+      {"start": 14, "end": 20, "label": "EVIDENCE"},
+      {"start": 89, "end": 99, "label": "DATE"},
+      {"start": 138, "end": 158, "label": "LAWYER"},
+      {"start": 159, "end": 172, "label": "LAWYER"}
+    ],
+    "source": "sample_case_7.json",
+    "kind": "text"
+  },
+  {
+    "text": "Call records between T.R. Ajayan and K. Balan on 12th March 2026 show multiple calls between 21:30 and 22:50, indicating communication during the critical window.",
+    "entities": [
+      {"start": 25, "end": 37, "label": "DEFENDANT"},
+      {"start": 42, "end": 50, "label": "DEFENDANT"},
+      {"start": 55, "end": 70, "label": "DATE"},
+      {"start": 79, "end": 87, "label": "DATE"},
+      {"start": 92, "end": 101, "label": "DATE"}
+    ],
+    "source": "sample_case_8.json",
+    "kind": "text"
+  },
+  {
+    "text": "The forged document contains a signature block that is misaligned by 3 pixels and uses a different font in the date field, suggesting possible digital manipulation of evidence.",
+    "entities": [
+      {"start": 43, "end": 57, "label": "EVIDENCE"},
+      {"start": 105, "end": 119, "label": "DATE"}
+    ],
+    "source": "sample_case_9.json",
+    "kind": "text"
+  },
+  {
+    "text": "Respondent K. Balan claimed he was at the fuel station at 22:20, but CCTV camera EV-0114 placed him at the crime scene at 22:14, only 6 minutes earlier, making it physically impossible to travel 40 km in that time.",
+    "entities": [
+      {"start": 11, "end": 19, "label": "DEFENDANT"},
+      {"start": 94, "end": 103, "label": "DATE"},
+      {"start": 125, "end": 138, "label": "EVIDENCE"},
+      {"start": 143, "end": 152, "label": "DATE"},
+      {"start": 162, "end": 171, "label": "DATE"}
+    ],
+    "source": "sample_case_10.json",
+    "kind": "text"
+  }
+]
