@@ -25,7 +25,7 @@ from typing import Dict, List, Optional, Tuple
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Header, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, Response
 from pydantic import BaseModel
 
 # Training service imports
