@@ -81,12 +81,27 @@ class ModelManager:
                 return {}
         return {}
 
+    def _resolve_model_path(self, path: Optional[str]) -> Optional[str]:
+        """Return a usable model path, tolerating moved checkouts.
+
+        Activation metadata stores absolute paths from the machine that trained
+        the model.  If that path no longer exists (repo moved, or the app is
+        deployed elsewhere), fall back to the same filename inside MODELS_DIR.
+        """
+        if not path:
+            return None
+        if os.path.exists(path):
+            return path
+        name = os.path.basename(path.rstrip("\\/"))
+        candidate = os.path.join(MODELS_DIR, name)
+        return candidate if os.path.exists(candidate) else path
+
     def _get_active_path(self, model_type: str) -> Optional[str]:
         metadata = self._load_metadata()
         for mtype, versions in metadata.items():
             for v in versions:
                 if v.get("active") and mtype == model_type:
-                    return v.get("model_path")
+                    return self._resolve_model_path(v.get("model_path"))
         return None
 
     # ----- BiLSTM-CRF NER -----
