@@ -57,6 +57,15 @@ async function json(res) {
       data = { detail: text }
     }
   }
+  if (res.status === 401) {
+    // Session expired (e.g. the backend restarted and in-memory tokens were
+    // lost). Drop the stale token and send the user to the sign-in page
+    // instead of stranding them on a dead screen.
+    logout()
+    if (!window.location.pathname.startsWith('/login')) {
+      window.location.assign('/login')
+    }
+  }
   if (!res.ok) throw new Error(data.detail || `Request failed (${res.status})`)
   return data
 }
@@ -220,30 +229,58 @@ export async function checkForgeryDirect(file) {
 // --- AI processing ----------------------------------------------------------
 
 export async function runAnalysis(caseId, onStatus) {
-  const res = await fetch(`${BASE_URL}/analysis/run/${caseId}`, {
-    method: 'POST',
-    headers: authHeaders(),
-  })
-  if (!res.ok) throw new Error('Analysis failed')
-
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() || ''
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const payload = line.slice(6)
-        if (payload === '__complete__') break
-        onStatus?.(payload)
-      }
+  const controller = new AbortController()
+  // Safety net: never leave the UI spinning forever if the stream stalls.
+  const timer = setTimeout(() => controller.abort(), 300000)
+  try {
+    const res = await fetch(`${BASE_URL}/analysis/run/${caseId}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      let detail = `Analysis failed (${res.status})`
+      try {
+        const err = await res.json()
+        if (err.detail) detail = err.detail
+      } catch (_) {}
+      throw new Error(detail)
     }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let complete = false
+    try {
+      while (!complete) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue
+          const payload = line.slice(5).trim()
+          if (!payload) continue
+          if (payload === '__complete__') {
+            complete = true
+            break
+          }
+          if (payload.startsWith('__error__')) {
+            throw new Error(payload.slice('__error__'.length).trim() || 'Analysis failed')
+          }
+          onStatus?.(payload)
+        }
+      }
+    } finally {
+      // Release the socket as soon as we are done, even if the server is
+      // still holding the response open.
+      try { await reader.cancel() } catch (_) {}
+    }
+    return { caseId, status: 'complete' }
+  } finally {
+    clearTimeout(timer)
   }
-  return { caseId, status: 'complete' }
 }
 
 // --- Analysis results (Module 3) --------------------------------------------

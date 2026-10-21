@@ -8,22 +8,79 @@ judgment-based demo cases.
 
 ## Run it
 
-### Backend
+Requirements: **Node.js 18+** and **Python 3.11+**. The commands below are for
+Windows PowerShell; on macOS/Linux use `source .venv/bin/activate` and
+`.venv/bin/python` instead of the `.venv\Scripts\...` paths.
 
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --port 8000
+You need **two terminals**: one for the backend, one for the frontend.
+
+### 1. First-time setup (from the repository root)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+npm install
 ```
 
-### Frontend
+`npm install` installs the frontend toolchain (React, Vite, Tailwind, React
+Flow); `pip install` pulls in FastAPI, PyTorch, scikit-learn, reportlab and the
+other model/reporting libraries.
 
-```bash
-npm install
+### 2. Backend (terminal 1)
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn main:app --port 8000
+```
+
+Wait for `Application startup complete`. The four models are pre-warmed in the
+background — the log prints `[warmup] models preloaded` when they are ready
+(usually within a few seconds). The API is usable immediately; only the very
+first analysis is slightly slower until warm-up finishes.
+
+- API docs: `http://127.0.0.1:8000/docs`
+
+### 3. Frontend (terminal 2, repository root)
+
+```powershell
 npm run dev
 ```
 
-Visit `http://localhost:5173`.
+Visit **`http://127.0.0.1:5173`** and sign in with the seeded administrator:
+
+```
+admin@mecr.com / Admin@1234
+```
+
+Vite is configured with `host: '127.0.0.1'` and `strictPort: true`, so it fails
+fast instead of silently switching ports.
+
+### Ports already in use
+
+If Uvicorn reports `[WinError 10048]`, something is already on port `8000`. If
+`http://127.0.0.1:8000/docs` opens, the backend is already running — leave it
+and just start the frontend. To restart it, press `Ctrl+C` in the backend
+terminal first.
+
+If port `5173` is busy, run the frontend on `5174` and visit
+`http://127.0.0.1:5174`:
+
+```powershell
+npm run dev -- --port 5174
+```
+
+The frontend talks to `http://127.0.0.1:8000/api/v1` by default. To point it at
+a different backend, create `.env` in the repository root:
+
+```bash
+VITE_API_URL=http://127.0.0.1:8001/api/v1
+```
+
+If you move the backend to another port, pass `--port 8001` to Uvicorn **and**
+update `VITE_API_URL` to match.
+
+> **Sessions are in memory.** Restarting the backend signs everyone out; the app
+> detects the expired token and redirects to the login page automatically.
 
 ### Forgery screening (experimental, secondary)
 
@@ -92,11 +149,12 @@ account's cases and invalidates its sessions.
    of resolution — have your forgery-detection endpoint return coordinates
    in that form (or normalize them client-side).
 
-## Not built yet (needs your backend to be meaningful)
+## Known gaps
 
-- Real file storage / multipart upload
-- PDF generation for the report (currently a placeholder alert)
-- Audio transcript display (upload works, but there's no waveform/transcript view yet)
+- Audio exhibits are transcribed for analysis, but there is no dedicated
+  waveform/transcript viewer in the UI yet.
+- Forgery screening is an experimental decision-support signal (see above), not
+  proof of authenticity or tampering.
 
 ## Training the four models on large public legal datasets
 

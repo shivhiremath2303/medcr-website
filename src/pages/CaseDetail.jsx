@@ -27,13 +27,21 @@ export default function CaseDetail() {
   const evidence = caseInfo?.evidenceDetail || []
 
   async function linkPerson(evidenceId, personId) {
-    await tagEvidence(evidenceId, personId)
-    load()
+    try {
+      await tagEvidence(evidenceId, personId)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   async function removeEvidence(id) {
-    await deleteEvidence(id)
-    load()
+    try {
+      await deleteEvidence(id)
+      await load()
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   async function handleScreen(evidenceId) {
@@ -51,10 +59,17 @@ export default function CaseDetail() {
   async function handleAnalyze() {
     setRunning(true)
     setStage('')
+    setError('')
     try {
       await runAnalysis(caseId, setStage)
       await load()
       navigate(`/cases/${caseId}/analysis`)
+    } catch (e) {
+      setError(
+        e.name === 'AbortError'
+          ? 'Analysis timed out. Please try again.'
+          : `Analysis failed: ${e.message}`
+      )
     } finally {
       setRunning(false)
     }
@@ -153,7 +168,11 @@ export default function CaseDetail() {
                       )}
                       {forgeryResults[ev.id] && (() => {
                         const r = forgeryResults[ev.id]
-                        if (r.error) return <span className="text-[11px] font-mono text-conflict" title={r.error}>Error</span>
+                        if (r.error) return (
+                          <span className="text-[11px] font-mono text-conflict" title={r.error}>
+                            {r.error.length > 30 ? `${r.error.slice(0, 30)}…` : r.error}
+                          </span>
+                        )
                         const tone = r.raw_result === 'LIKELY AUTHENTIC' ? 'verified'
                           : r.raw_result === 'POTENTIALLY TAMPERED' ? 'conflict' : 'gold'
                         return (

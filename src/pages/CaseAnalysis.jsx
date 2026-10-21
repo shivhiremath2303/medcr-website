@@ -53,6 +53,7 @@ export default function CaseAnalysis() {
   const [notFound, setNotFound] = useState(false)
   const [running, setRunning] = useState(false)
   const [stage, setStage] = useState('')
+  const [runError, setRunError] = useState('')
 
   useEffect(() => {
     setNotFound(false)
@@ -61,11 +62,16 @@ export default function CaseAnalysis() {
 
   async function handleRerun() {
     setRunning(true)
+    setRunError('')
     try {
       await runAnalysis(caseId, setStage)
       setCaseInfo(await getCase(caseId))
     } catch (err) {
-      setNotFound(true)
+      setRunError(
+        err.name === 'AbortError'
+          ? 'Analysis timed out. Please try again.'
+          : `Analysis failed: ${err.message}`
+      )
     } finally {
       setRunning(false)
     }
@@ -103,6 +109,12 @@ export default function CaseAnalysis() {
         </button>
         {running && <span className="text-xs text-textsoft font-mono">{stage}</span>}
       </div>
+
+      {runError && (
+        <p className="text-sm text-conflict bg-conflictsoft border border-conflict/30 rounded-md px-4 py-2.5 mb-5">
+          {runError}
+        </p>
+      )}
 
       <ModelRunStrip caseId={caseId} />
 
@@ -896,6 +908,8 @@ function Report({ caseId }) {
           conflicts: replace(prev.conflicts),
           anomalies: replace(prev.anomalies),
           reviewSummary: res.reviewSummary || prev.reviewSummary,
+          executiveSummary: res.executiveSummary || prev.executiveSummary,
+          summary: res.summary || prev.summary,
         }
       })
     } catch (err) {

@@ -121,11 +121,41 @@ class BiLSTM_CRF(nn.Module):
                             dropout=dropout if num_layers > 1 else 0.0)
         self.dropout = nn.Dropout(dropout)
         self.hidden2tag = nn.Linear(hidden_dim, len(tag_to_ix))
+        # Two unrelated PyPI projects both expose a CRF class, with different
+        # constructor/forward APIs.  Prefer kmkurn's `pytorch-crf` (module
+        # `torchcrf`) and fall back to the `TorchCRF` package when only that
+        # is installed, so the NER model loads in either environment.
         try:
-            from TorchCRF import CRF
-        except ImportError:  # pragma: no cover - depends on local install
             from torchcrf import CRF
-        self.crf = CRF(len(tag_to_ix), batch_first=True)
+            self.crf = CRF(len(tag_to_ix), batch_first=True)
+            self._crf_api = "pytorch_crf"
+        except ImportError:  # pragma: no cover - depends on local install
+            from TorchCRF import CRF
+            self.crf = CRF(len(tag_to_ix), use_gpu=torch.cuda.is_available())
+            self._crf_api = "torchcrf"
+
+    # Checkpoints trained with kmkurn's `pytorch-crf` store transition
+    # parameters under different names than the `TorchCRF` package.  The
+    # tensors are shape-identical, so renaming is enough to keep a trained
+    # model fully usable regardless of which package is installed.
+    _CRF_KEY_RENAMES = {
+        "torchcrf": {
+            "crf.start_transitions": "crf.start_trans",
+            "crf.end_transitions": "crf.end_trans",
+            "crf.transitions": "crf.trans_matrix",
+        },
+        "pytorch_crf": {
+            "crf.start_trans": "crf.start_transitions",
+            "crf.end_trans": "crf.end_transitions",
+            "crf.trans_matrix": "crf.transitions",
+        },
+    }
+
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        renames = self._CRF_KEY_RENAMES.get(getattr(self, "_crf_api", ""), {})
+        if renames:
+            state_dict = {renames.get(k, k): v for k, v in state_dict.items()}
+        return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     def forward(self, x):
         embeds = self.dropout(self.embedding(x))
@@ -134,11 +164,16 @@ class BiLSTM_CRF(nn.Module):
 
     def loss(self, x, tags, mask):
         emissions = self.forward(x)
-        return -self.crf(emissions, tags, mask=mask, reduction='mean')
+        if self._crf_api == "pytorch_crf":
+            return -self.crf(emissions, tags, mask=mask, reduction='mean')
+        # TorchCRF: forward() returns the negative log-likelihood tensor.
+        return self.crf(emissions, tags, mask.bool()).mean()
 
     def predict(self, x, mask):
         emissions = self.forward(x)
-        return self.crf.decode(emissions, mask=mask)
+        if self._crf_api == "pytorch_crf":
+            return self.crf.decode(emissions, mask=mask)
+        return self.crf.viterbi_decode(emissions, mask.bool())
 
 
 class LegalNERDataset(Dataset):

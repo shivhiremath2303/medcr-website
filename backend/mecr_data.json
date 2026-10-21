@@ -162,9 +162,11 @@
         "EV-0156"
       ],
       "status": "active",
-      "conflicts": 2,
+      "conflicts": 4,
       "createdAt": "2026-10-20T11:33:09.929573+00:00",
-      "owner": "svhiramath1@gmail.com"
+      "owner": "svhiramath1@gmail.com",
+      "reviews": {},
+      "anomalies": 1
     },
     "IN-REAL-02-SVH": {
       "id": "IN-REAL-02-SVH",

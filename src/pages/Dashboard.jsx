@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { listCases } from '../lib/api'
 import { Badge, Card, Eyebrow } from '../components/ui/Primitives'
 
@@ -16,9 +16,14 @@ export default function Dashboard() {
   const [cases, setCases] = useState([])
   const [filter, setFilter] = useState('active')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
-    listCases().then(setCases).finally(() => setLoading(false))
+    listCases()
+      .then(setCases)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
   }, [])
 
   const filtered = cases.filter((c) => c.status === filter)
@@ -62,6 +67,9 @@ export default function Dashboard() {
       </div>
 
       <Card>
+        {error && (
+          <p className="px-4 py-3 text-sm text-conflict border-b border-line">{error}</p>
+        )}
         <table className="w-full">
           <thead>
             <tr className="border-b border-line">
@@ -74,7 +82,14 @@ export default function Dashboard() {
           </thead>
           <tbody>
             {filtered.map((c) => (
-              <tr key={c.id} className="border-b border-line last:border-none hover:bg-paperdim/40">
+              <tr
+                key={c.id}
+                onClick={(e) => {
+                  if (e.target.closest('a')) return
+                  navigate(`/cases/${c.id}`)
+                }}
+                className="border-b border-line last:border-none hover:bg-paperdim/40 cursor-pointer"
+              >
                 <td className="px-4 py-3.5 text-sm">
                   <Link to={`/cases/${c.id}`} className="font-medium text-ink hover:text-gold">
                     {c.caseNumber || c.id}

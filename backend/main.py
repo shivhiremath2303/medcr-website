@@ -14,6 +14,8 @@ Run:  cd backend && pip install -r requirements.txt && python -m uvicorn main:ap
 """
 import asyncio
 import hashlib
+from contextlib import asynccontextmanager
+import threading
 import json
 import os
 import re
@@ -457,7 +459,30 @@ def run_rgcn_graph(entities: list, text_len: int = 0):
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
-app = FastAPI(title="MECR Backend", version="0.5.0")
+def _warm_models() -> None:
+    """Load the ML models once, off the request path.
+
+    First-use loading costs ~40s (torch import + four checkpoints).  Doing it
+    in a daemon thread keeps startup fast while making the first analysis run
+    feel instant instead of frozen.
+    """
+    try:
+        model_manager.get_bilstm_crf()
+        model_manager.get_xgboost()
+        model_manager.get_legalbert()
+        model_manager.get_rgcn()
+        print("[warmup] models preloaded")
+    except Exception as exc:  # pragma: no cover - best effort only
+        print(f"[warmup] model preload failed: {exc}")
+
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    threading.Thread(target=_warm_models, name="model-warmup", daemon=True).start()
+    yield
+
+
+app = FastAPI(title="MECR Backend", version="0.5.0", lifespan=_lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -1420,25 +1445,48 @@ def _apply_reviews(case: dict, conflicts: List[dict], anomalies: List[dict],
                    report: Optional[dict] = None) -> dict:
     """Merge persisted human-review decisions into live findings."""
     reviews = case.setdefault("reviews", {})
-    for item in list(conflicts) + list(anomalies):
-        record = reviews.get(str(item.get("id"))) or {}
-        item["review"] = {
-            "status": record.get("status", "pending"),
-            "reviewer": record.get("reviewer"),
-            "reviewedAt": record.get("reviewedAt"),
-            "note": record.get("note", ""),
-        }
+
+    def _apply(items: List[dict]) -> None:
+        for item in items:
+            record = reviews.get(str(item.get("id"))) or {}
+            item["review"] = {
+                "status": record.get("status", "pending"),
+                "reviewer": record.get("reviewer"),
+                "reviewedAt": record.get("reviewedAt"),
+                "note": record.get("note", ""),
+            }
+
+    findings = list(conflicts) + list(anomalies)
+    _apply(findings)
     summary = {"confirmed": 0, "dismissed": 0, "pending": 0}
-    for item in list(conflicts) + list(anomalies):
+    for item in findings:
         status = (item.get("review") or {}).get("status", "pending")
         summary[status] = summary.get(status, 0) + 1
-    summary["total"] = len(conflicts) + len(anomalies)
+    summary["total"] = len(findings)
     if report is not None:
+        # The assembled report holds its own copies of the findings, so a new
+        # review has to be written into those copies as well — otherwise the
+        # Report tab keeps showing "pending" until the next full analysis.
+        report_findings = list(report.get("conflicts", [])) + list(report.get("anomalies", []))
+        _apply(report_findings)
         report["reviewSummary"] = summary
         report["reviews"] = {
             key: value for key, value in reviews.items()
-            if any(str(item.get("id")) == key for item in list(conflicts) + list(anomalies))
+            if any(str(item.get("id")) == key for item in findings)
         }
+        # The executive summary embeds the tally as prose, so refresh it too.
+        tally = (
+            f"{summary['confirmed']} confirmed, {summary['dismissed']} dismissed, "
+            f"{summary['pending']} pending human verification."
+        )
+        for key in ("executiveSummary", "summary"):
+            text = report.get(key)
+            if isinstance(text, str) and text:
+                report[key] = re.sub(
+                    r"\d+ confirmed, \d+ dismissed, \d+ pending human verification\.",
+                    tally,
+                    text,
+                )
     return summary
 
 
@@ -2244,23 +2292,33 @@ async def admin_train_model(model_type: str, body: TrainRequest, user: dict = De
                 from services.training_service import train_bilstm_crf
 
                 epochs = body.epochs or 5
-                result = train_bilstm_crf(dataset_name, epochs=epochs)
+                # Training is CPU-bound and can run for minutes.  Running it
+                # inline would block the event loop and freeze every other
+                # request, so hand it to a worker thread.
+                result = await asyncio.to_thread(
+                    train_bilstm_crf, dataset_name, epochs=epochs
+                )
             elif model_type == "xgboost":
                 from services.training_service import train_xgboost_anomaly
 
-                result = train_xgboost_anomaly(dataset_name, max_docs=10000)
+                result = await asyncio.to_thread(
+                    train_xgboost_anomaly, dataset_name, max_docs=10000
+                )
             elif model_type == "legalbert":
                 from services.training_service import train_legalbert_contradiction
 
                 epochs = body.epochs or 1
-                result = train_legalbert_contradiction(
+                result = await asyncio.to_thread(
+                    train_legalbert_contradiction,
                     dataset_name, epochs=epochs, max_train=18000, max_test=2100
                 )
             elif model_type == "rgcn":
                 from services.training_service import train_rgcn
 
                 epochs = body.epochs or 40
-                result = train_rgcn(dataset_name, epochs=epochs, max_docs=8000)
+                result = await asyncio.to_thread(
+                    train_rgcn, dataset_name, epochs=epochs, max_docs=8000
+                )
 
             TRAINING_JOBS[job_id] = {
                 "message": "Training complete",
@@ -2273,7 +2331,11 @@ async def admin_train_model(model_type: str, body: TrainRequest, user: dict = De
             TRAINING_JOBS[job_id] = {"message": str(e), "progress": 0, "status": "failed"}
             yield f"data: {json.dumps({'message': str(e), 'progress': 0, 'status': 'failed'})}\n\n"
 
-    return StreamingResponse(run_training(), media_type="text/event-stream")
+    return StreamingResponse(
+        run_training(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.get("/api/v1/admin/training/status/{job_id}")
@@ -2684,7 +2746,7 @@ async def forgery_check_upload(
             detail="Image is too large for forgery screening (maximum 25 MB).",
         )
 
-    result = _run_forgery_inference(payload)
+    result = await asyncio.to_thread(_run_forgery_inference, payload)
     if result.get("error"):
         raise _forgery_http_error(result)
 
@@ -2724,7 +2786,7 @@ async def forgery_check_evidence(
     except OSError as exc:
         raise HTTPException(status_code=500, detail=f"Could not read evidence file: {exc}")
 
-    result = _run_forgery_inference(payload)
+    result = await asyncio.to_thread(_run_forgery_inference, payload)
     if result.get("error"):
         raise _forgery_http_error(result)
 
@@ -2745,37 +2807,71 @@ async def run_analysis(case_id: str, user: dict = Depends(require_user)):
     async def event_generator():
         # A manual re-run must recompute, not replay the cached findings.
         ANALYSES.setdefault(case_id, {}).pop("results", None)
-        for stage in PIPELINE_STAGES:
-            ANALYSES.setdefault(case_id, {})["stage"] = stage
-            ANALYSES[case_id]["status"] = "running"
-            yield f"data: {stage}\n\n"
-            await asyncio.sleep(1.5)
-        _ensure_results(case_id)
-        ANALYSES[case_id]["status"] = "complete"
-        yield "data: __complete__\n\n"
+        ANALYSES.setdefault(case_id, {})["status"] = "running"
+        try:
+            # The stage labels are progress messages; the real work happens in
+            # _ensure_results below.  Keep the hand-off quick so the run is
+            # dominated by actual inference instead of artificial sleeps.
+            for stage in PIPELINE_STAGES:
+                ANALYSES[case_id]["stage"] = stage
+                yield f"data: {stage}\n\n"
+                await asyncio.sleep(0.05)
+            # _ensure_results is CPU-bound (BiLSTM/LegalBERT/XGBoost/R-GCN).
+            # Running it inline would block the event loop and make every
+            # other request (and the accept loop) stall, so offload it.
+            await asyncio.to_thread(_ensure_results, case_id)
+            ANALYSES[case_id]["status"] = "complete"
+            yield "data: __complete__\n\n"
+        except Exception as exc:  # never leave the client hanging
+            ANALYSES[case_id]["status"] = "error"
+            detail = str(exc).replace("\n", " ")[:300]
+            yield f"data: __error__{detail}\n\n"
+            yield "data: __complete__\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 # ---------------------------------------------------------------------------
 # Analysis results (Module 3)
 # ---------------------------------------------------------------------------
+# The first read of a case runs the full model pipeline (seconds of CPU work).
+# A per-case lock stops concurrent tabs from duplicating that work, and every
+# caller runs it in a worker thread so the event loop never stalls.
+_ANALYSIS_LOCKS: Dict[str, Any] = {}
+_ANALYSIS_LOCKS_GUARD = threading.Lock()
+
+
+def _cached_results(case_id: str) -> dict:
+    with _ANALYSIS_LOCKS_GUARD:
+        lock = _ANALYSIS_LOCKS.setdefault(case_id, threading.Lock())
+    with lock:
+        return _ensure_results(case_id)
+
+
+async def _results(case_id: str) -> dict:
+    return await asyncio.to_thread(_cached_results, case_id)
+
+
 @app.get("/api/v1/cases/{case_id}/conflicts")
 async def get_conflicts(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
-    return _ensure_results(case_id)["conflicts"]
+    return (await _results(case_id))["conflicts"]
 
 
 @app.get("/api/v1/cases/{case_id}/anomalies")
 async def get_anomalies(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
-    return _ensure_results(case_id)["anomalies"]
+    return (await _results(case_id))["anomalies"]
 
 
 @app.get("/api/v1/cases/{case_id}/parties")
 async def get_parties(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
-    return _ensure_results(case_id).get("parties", [])
+    return (await _results(case_id)).get("parties", [])
 
 
 @app.post("/api/v1/cases/{case_id}/review/{finding_id}")
@@ -2786,7 +2882,7 @@ async def review_finding(case_id: str, finding_id: str, body: ReviewIn,
     status = (body.status or "").strip().lower()
     if status not in _REVIEW_STATUSES:
         raise HTTPException(400, "Review status must be pending, confirmed or dismissed")
-    results = _ensure_results(case_id)
+    results = await _results(case_id)
     findings = list(results.get("conflicts", [])) + list(results.get("anomalies", []))
     finding = next((item for item in findings if str(item.get("id")) == finding_id), None)
     if not finding:
@@ -2805,20 +2901,28 @@ async def review_finding(case_id: str, finding_id: str, body: ReviewIn,
     summary = _apply_reviews(case, results.get("conflicts", []),
                              results.get("anomalies", []), results.get("report"))
     _save_data()
-    return {"findingId": finding_id, "review": finding.get("review"),
-            "reviewSummary": summary}
+    report = results.get("report") or {}
+    return {
+        "findingId": finding_id,
+        "review": finding.get("review"),
+        "reviewSummary": summary,
+        # The executive summary embeds the tally in prose; send the refreshed
+        # text so the Report tab updates without a full reload.
+        "executiveSummary": report.get("executiveSummary"),
+        "summary": report.get("summary"),
+    }
 
 
 @app.get("/api/v1/cases/{case_id}/graph")
 async def get_graph(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
-    return _ensure_results(case_id)["graph"]
+    return (await _results(case_id))["graph"]
 
 
 @app.get("/api/v1/cases/{case_id}/entities")
 async def get_entities(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
-    return _ensure_results(case_id)["entities"]
+    return (await _results(case_id))["entities"]
 
 
 # ---------------------------------------------------------------------------
@@ -2840,7 +2944,7 @@ async def report_meta(case_id: str, user: dict = Depends(require_user)):
 @app.get("/api/v1/report/{case_id}/content")
 async def report_content(case_id: str, user: dict = Depends(require_user)):
     _owned_case(case_id, user)
-    return _ensure_results(case_id)["report"]
+    return (await _results(case_id))["report"]
 
 
 @app.post("/api/v1/report/{case_id}/regenerate")
@@ -2848,7 +2952,7 @@ async def report_regenerate(case_id: str, user: dict = Depends(require_user)):
     """Force re-run of analysis and fresh explainable report assembly."""
     _owned_case(case_id, user)
     ANALYSES.setdefault(case_id, {}).pop("results", None)
-    results = _ensure_results(case_id)
+    results = await _results(case_id)
     return results["report"]
 
 
@@ -2856,11 +2960,11 @@ async def report_regenerate(case_id: str, user: dict = Depends(require_user)):
 async def report_pdf(case_id: str, user: dict = Depends(require_user)):
     """Generate and return a downloadable, publication-grade PDF report."""
     case = _owned_case(case_id, user)
-    results = _ensure_results(case_id)
+    results = await _results(case_id)
     report = results.get("report") or {}
     from services.report_service import render_report_pdf
     try:
-        pdf_bytes = render_report_pdf(report)
+        pdf_bytes = await asyncio.to_thread(render_report_pdf, report)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to render PDF: {str(exc)}")
     number = case.get("caseNumber", case_id)

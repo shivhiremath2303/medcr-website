@@ -163,6 +163,21 @@
       "trained_at": "2026-10-20T14:49:13.280088",
       "active": true,
       "activated_at": "2026-10-20T09:30:01.495342+00:00"
+    },
+    {
+      "dataset": "sample",
+      "epochs": 8,
+      "accuracy": 0.0,
+      "entity_f1": 0.0,
+      "vocab_size": 53,
+      "num_tags": 18,
+      "samples": 10,
+      "train_samples": 9,
+      "test_samples": 1,
+      "evaluation": "random 10% split",
+      "max_len": 128,
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\backend\\services\\models\\bilstm_crf_sample.pth",
+      "trained_at": "2026-10-21T19:05:51.486655"
     }
   ],
   "xgboost": [
@@ -292,6 +307,51 @@
       "trained_at": "2026-10-20T15:00:33.501732",
       "active": true,
       "activated_at": "2026-10-20T09:31:16.452141+00:00"
+    },
+    {
+      "dataset": "sample",
+      "accuracy": 50.0,
+      "precision": 50.0,
+      "recall": 100.0,
+      "f1": 66.67,
+      "roc_auc": 0.5,
+      "samples": 20,
+      "features": [
+        "n_chars",
+        "n_words",
+        "n_sentences",
+        "avg_sentence_len",
+        "max_sentence_len",
+        "avg_word_len",
+        "unique_word_ratio",
+        "digit_ratio",
+        "upper_ratio",
+        "punct_ratio",
+        "newline_ratio",
+        "repeat_line_ratio",
+        "legal_kw_count",
+        "legal_kw_ratio",
+        "date_entities",
+        "court_entities",
+        "judge_entities",
+        "party_entities",
+        "lawyer_entities",
+        "statute_entities",
+        "evidence_entities",
+        "entity_count",
+        "entity_density",
+        "type_diversity",
+        "entities_per_sentence",
+        "ends_complete",
+        "redaction_signals",
+        "placeholder_ratio",
+        "boilerplate_signals",
+        "short_line_ratio"
+      ],
+      "anomaly_definition": "real judgment + simulated document damage (truncation/redaction/entity loss/duplication/boilerplate)",
+      "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\backend\\services\\models\\xgboost_anomaly_sample.json",
+      "trained_at": "2026-10-21T19:40:40.212658",
+      "active": false
     }
   ],
   "rgcn": [

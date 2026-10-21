@@ -13,13 +13,16 @@ export default function CaseUpload() {
   const [evidence, setEvidence] = useState([])
   const [analyzing, setAnalyzing] = useState(false)
   const [stage, setStage] = useState('')
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
-    getCase(caseId).then((c) => {
-      setCaseInfo(c)
-      setEvidence(c.evidenceDetail || [])
-    })
+    getCase(caseId)
+      .then((c) => {
+        setCaseInfo(c)
+        setEvidence(c.evidenceDetail || [])
+      })
+      .catch((e) => setError(e.message))
   }, [caseId])
 
   const people = caseInfo?.people || []
@@ -29,9 +32,12 @@ export default function CaseUpload() {
     if (list.length === 0) return
     setUploading(true)
     setProgress(0)
+    setError('')
     try {
       const uploaded = await uploadEvidence(caseId, list, setProgress)
       setEvidence((e) => [...e, ...uploaded])
+    } catch (e) {
+      setError(e.message || 'Upload failed. Please try again.')
     } finally {
       setUploading(false)
       setFiles([])
@@ -45,15 +51,30 @@ export default function CaseUpload() {
   }
 
   async function linkPerson(evidenceId, personId) {
-    await tagEvidence(evidenceId, personId)
-    setEvidence((list) => list.map((ev) => (ev.id === evidenceId ? { ...ev, linkedTo: personId } : ev)))
+    try {
+      await tagEvidence(evidenceId, personId)
+      setEvidence((list) => list.map((ev) => (ev.id === evidenceId ? { ...ev, linkedTo: personId } : ev)))
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   async function handleAnalyze() {
     setAnalyzing(true)
-    await runAnalysis(caseId, setStage)
-    setAnalyzing(false)
-    navigate(`/cases/${caseId}/analysis`)
+    setStage('')
+    setError('')
+    try {
+      await runAnalysis(caseId, setStage)
+      navigate(`/cases/${caseId}/analysis`)
+    } catch (e) {
+      setError(
+        e.name === 'AbortError'
+          ? 'Analysis timed out. Please try again.'
+          : `Analysis failed: ${e.message}`
+      )
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   return (
@@ -63,6 +84,8 @@ export default function CaseUpload() {
       <p className="text-textsoft text-sm mb-7">
         PDFs, images, and audio transcripts all go through the same pipeline before BIO-tagging.
       </p>
+
+      {error && <p className="text-conflict text-xs mb-4">{error}</p>}
 
       <div
         onDragOver={(e) => { e.preventDefault(); setDragActive(true) }}
