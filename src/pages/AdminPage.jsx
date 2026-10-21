@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [uploadingDataset, setUploadingDataset] = useState(false)
   const [catalog, setCatalog] = useState([])
   const [fetchingDataset, setFetchingDataset] = useState('')
+  const [downloadingDataset, setDownloadingDataset] = useState('')
   const [training, setTraining] = useState({})
   const [trainResult, setTrainResult] = useState(null)
 
@@ -88,9 +89,9 @@ export default function AdminPage() {
         password: newUser.password,
         isAdmin: newUser.isAdmin,
       })
-      setInfo(`Created ${newUser.email}`)
       setNewUser({ name: '', email: '', password: '', isAdmin: false })
       await load()
+      setInfo(`Created ${newUser.email}`)
     } catch (err) {
       setError(err.message)
     }
@@ -131,8 +132,8 @@ export default function AdminPage() {
     setError('')
     try {
       await adminDeleteUser(email)
-      setInfo(`Deleted ${email}`)
       await load()
+      setInfo(`Deleted ${email}`)
     } catch (err) {
       setError(err.message)
     }
@@ -145,9 +146,9 @@ export default function AdminPage() {
     setUploadingDataset(true)
     try {
       const result = await adminUploadDataset(uploadFile)
-      setInfo(`Dataset uploaded: ${result.dataset_name}`)
       setUploadFile(null)
       await load()
+      setInfo(`Dataset uploaded: ${result.dataset_name}`)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -155,17 +156,39 @@ export default function AdminPage() {
     }
   }
 
-  async function handleFetchDataset(datasetName) {
+  async function handleFetchDataset(datasetName, force = false) {
     setError('')
     setFetchingDataset(datasetName)
+    if (force) {
+      setInfo(`Re-downloading ${datasetName} from Hugging Face — this can take a few minutes…`)
+    } else {
+      setInfo(`Preparing ${datasetName} from Hugging Face…`)
+    }
     try {
-      const result = await adminFetchDataset(datasetName)
-      setInfo(`${datasetName} ready — ${result.dataset?.records || result.dataset?.train_records || 0} records`)
+      const result = await adminFetchDataset(datasetName, { force })
       await load()
+      const count = result.dataset?.records ?? result.dataset?.train_records ?? 0
+      setInfo(`${datasetName} ready — ${count} records`)
     } catch (err) {
       setError(err.message)
+      setInfo('')
     } finally {
       setFetchingDataset('')
+    }
+  }
+
+  async function handleDownloadDataset(datasetName) {
+    setError('')
+    setInfo(datasetName === 'sample' ? 'Preparing the sample ZIP…' : `Preparing ${datasetName}.zip…`)
+    setDownloadingDataset(datasetName)
+    try {
+      await adminDownloadDataset(datasetName)
+      setInfo(`${datasetName}.zip downloaded`)
+    } catch (err) {
+      setError(err.message)
+      setInfo('')
+    } finally {
+      setDownloadingDataset('')
     }
   }
 
@@ -288,7 +311,7 @@ export default function AdminPage() {
 
       {activeTab === 'dashboard' && <DashboardTab me={me} users={users} datasets={datasets} models={models} training={training} />}
       {activeTab === 'users' && <UsersTab users={users} me={me} newUser={newUser} updateUser={updateUser} handleCreateUser={handleCreateUser} handleToggleRole={handleToggleRole} handleResetPassword={handleResetPassword} handleDeleteUser={handleDeleteUser} />}
-      {activeTab === 'datasets' && <DatasetsTab datasets={datasets} uploadFile={uploadFile} setUploadFile={setUploadFile} uploadingDataset={uploadingDataset} handleUploadDataset={handleUploadDataset} catalog={catalog} fetchingDataset={fetchingDataset} handleFetchDataset={handleFetchDataset} />}
+      {activeTab === 'datasets' && <DatasetsTab datasets={datasets} uploadFile={uploadFile} setUploadFile={setUploadFile} uploadingDataset={uploadingDataset} handleUploadDataset={handleUploadDataset} catalog={catalog} fetchingDataset={fetchingDataset} handleFetchDataset={handleFetchDataset} downloadingDataset={downloadingDataset} handleDownloadDataset={handleDownloadDataset} />}
       {activeTab === 'training' && <TrainingTab modelTypes={MODEL_TYPES} datasets={datasets} training={training} setTraining={setTraining} startTraining={startTraining} trainResult={trainResult} />}
       {activeTab === 'models' && <ModelsTab models={models} activateModel={activateModel} />}
     </div>
@@ -439,7 +462,7 @@ function UsersTab({ users, me, newUser, updateUser, handleCreateUser, handleTogg
   )
 }
 
-function DatasetsTab({ datasets, uploadFile, setUploadFile, uploadingDataset, handleUploadDataset, catalog, fetchingDataset, handleFetchDataset }) {
+function DatasetsTab({ datasets, uploadFile, setUploadFile, uploadingDataset, handleUploadDataset, catalog, fetchingDataset, handleFetchDataset, downloadingDataset, handleDownloadDataset }) {
   const PUBLIC_DATASETS = {
     legal_ner_large: {
       title: 'Indian Legal NER Corpus',
@@ -472,10 +495,12 @@ function DatasetsTab({ datasets, uploadFile, setUploadFile, uploadingDataset, ha
                 <div className="text-xs text-textsoft mb-3">{info.detail}</div>
                 <Button
                   size="sm"
-                  onClick={() => handleFetchDataset(item.name)}
+                  onClick={() => handleFetchDataset(item.name, item.built)}
                   disabled={busy}
                 >
-                  {busy ? 'Downloading…' : item.built ? '↻ Re-download' : '⬇ Download & Prepare'}
+                  {busy
+                    ? (item.built ? 'Re-downloading…' : 'Downloading…')
+                    : item.built ? '↻ Re-download' : '⬇ Download & Prepare'}
                 </Button>
               </div>
             )
@@ -490,10 +515,11 @@ function DatasetsTab({ datasets, uploadFile, setUploadFile, uploadingDataset, ha
           with entity annotations (COURT, DEFENDANT, EVIDENCE, DATE, WITNESS, LAWYER, PLACE).
         </p>
         <Button
-          onClick={() => adminDownloadDataset('sample')}
+          onClick={() => handleDownloadDataset('sample')}
+          disabled={downloadingDataset === 'sample'}
           className="w-full"
         >
-          ⬇ Download Sample MECR Dataset (ZIP)
+          {downloadingDataset === 'sample' ? 'Preparing sample ZIP…' : '⬇ Download Sample MECR Dataset (ZIP)'}
         </Button>
         <p className="text-[11px] text-textsoft mt-2">
           Extract the ZIP and re-upload it, or upload your own ZIP with nested folders containing
@@ -557,11 +583,12 @@ function DatasetsTab({ datasets, uploadFile, setUploadFile, uploadingDataset, ha
                 <td className="px-4 py-3 text-sm text-textsoft font-mono">{d.json_files || 0}</td>
                 <td className="px-4 py-3 text-right">
                   <Button
-                    onClick={() => adminDownloadDataset(d.name)}
+                    onClick={() => handleDownloadDataset(d.name)}
+                    disabled={downloadingDataset === d.name}
                     size="sm"
                     variant="ghost"
                   >
-                    ⬇ Download
+                    {downloadingDataset === d.name ? 'Preparing…' : '⬇ Download'}
                   </Button>
                 </td>
               </tr>

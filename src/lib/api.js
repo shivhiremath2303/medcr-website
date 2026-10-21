@@ -438,8 +438,9 @@ export async function adminDatasetCatalog() {
   return json(res)
 }
 
-export async function adminFetchDataset(datasetName) {
-  const res = await fetch(`${BASE_URL}/admin/dataset/fetch/${encodeURIComponent(datasetName)}`, {
+export async function adminFetchDataset(datasetName, { force = false } = {}) {
+  const query = force ? '?force=true' : ''
+  const res = await fetch(`${BASE_URL}/admin/dataset/fetch/${encodeURIComponent(datasetName)}${query}`, {
     method: 'POST',
     headers: authHeaders(),
   })
@@ -450,7 +451,16 @@ export async function adminDownloadDataset(datasetName) {
   const res = await fetch(`${BASE_URL}/admin/dataset/download/${encodeURIComponent(datasetName)}`, {
     headers: authHeaders(),
   })
-  if (!res.ok) throw new Error(`Download failed (${res.status})`)
+  if (!res.ok) {
+    let detail = `Download failed (${res.status})`
+    try {
+      const body = await res.json()
+      if (body?.detail) detail = body.detail
+    } catch {
+      // response was not JSON — keep the status message
+    }
+    throw new Error(detail)
+  }
   const blob = await res.blob()
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -458,8 +468,9 @@ export async function adminDownloadDataset(datasetName) {
   a.download = `${datasetName}.zip`
   document.body.appendChild(a)
   a.click()
-  window.URL.revokeObjectURL(url)
   document.body.removeChild(a)
+  // Give the browser a moment to start the download before releasing the blob.
+  setTimeout(() => window.URL.revokeObjectURL(url), 1000)
   return { downloaded: datasetName }
 }
 

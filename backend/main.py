@@ -2208,14 +2208,23 @@ async def admin_dataset_catalog(user: dict = Depends(require_admin)):
 
 
 @app.post("/api/v1/admin/dataset/fetch/{dataset_name}")
-async def admin_fetch_dataset(dataset_name: str, user: dict = Depends(require_admin)):
-    """Download + materialise a public legal dataset from Hugging Face."""
+async def admin_fetch_dataset(
+    dataset_name: str,
+    force: bool = False,
+    user: dict = Depends(require_admin),
+):
+    """Download + materialise a public legal dataset from Hugging Face.
+
+    ``force=true`` re-downloads from the source even when a cached copy exists
+    (used by the "Re-download" button). The work runs in a worker thread, so a
+    slow Hugging Face download never blocks the rest of the API.
+    """
     from starlette.concurrency import run_in_threadpool
     from services.external_datasets import BUILDERS, build_dataset
     if dataset_name not in BUILDERS:
         raise HTTPException(400, f"Unknown dataset. Use one of: {sorted(BUILDERS)}")
     try:
-        meta = await run_in_threadpool(build_dataset, dataset_name)
+        meta = await run_in_threadpool(build_dataset, dataset_name, force=force)
     except Exception as exc:
         raise HTTPException(500, f"Download failed: {exc}")
     return {"message": f"{dataset_name} ready", "dataset": meta}
@@ -2223,38 +2232,85 @@ async def admin_fetch_dataset(dataset_name: str, user: dict = Depends(require_ad
 
 @app.get("/api/v1/admin/dataset/download/{dataset_name}")
 async def admin_download_dataset(dataset_name: str, user: dict = Depends(require_admin)):
-    """Download a dataset ZIP file. Supports 'sample' for the built-in MECR sample dataset."""
-    from services.dataset_service import DATASET_DIR
+    """Download a dataset as a ZIP file.
+
+    The archive is built in a worker thread and served from a temp file, with
+    cleanup afterwards. Large datasets (e.g. 800 MB of uploads) therefore never
+    block the event loop or get copied twice into the server's memory.
+    """
+    import tempfile
     import zipfile
-    import io
+    from starlette.background import BackgroundTask
+    from starlette.concurrency import run_in_threadpool
+    from services.dataset_service import DATASET_DIR
+
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    prebuilt_sample = os.path.join(backend_dir, "datasets", "sample_mecr_dataset.zip")
+    entries: List[tuple] = []
 
     if dataset_name == "sample":
+        # A zip placed directly in the store wins; otherwise archive the live
+        # sample folder so the download always matches what the app uses.
         zip_path = os.path.join(DATASET_DIR, "sample_mecr_dataset.zip")
-        if not os.path.exists(zip_path):
+        if os.path.isfile(zip_path):
+            return FileResponse(
+                zip_path,
+                media_type="application/zip",
+                filename="sample_mecr_dataset.zip",
+            )
+
+        sample_dir = os.path.join(DATASET_DIR, "sample")
+        if os.path.isdir(sample_dir):
+            for root, _dirs, files in os.walk(sample_dir):
+                for file in files:
+                    path = os.path.join(root, file)
+                    entries.append((path, os.path.relpath(path, sample_dir)))
+
+        if not entries and os.path.isfile(prebuilt_sample):
+            return FileResponse(
+                prebuilt_sample,
+                media_type="application/zip",
+                filename="sample_mecr_dataset.zip",
+            )
+
+        if not entries:
+            sample_json = os.path.join(backend_dir, "datasets", "sample_mecr_dataset.json")
+            if os.path.isfile(sample_json):
+                entries.append((sample_json, os.path.basename(sample_json)))
+
+        if not entries:
             raise HTTPException(404, "Sample dataset not found")
-        return FileResponse(
-            zip_path,
-            media_type="application/zip",
-            filename="sample_mecr_dataset.zip",
-        )
-
-    # For uploaded datasets, zip them on the fly
-    folder_path = os.path.join(DATASET_DIR, dataset_name)
-    if not os.path.exists(folder_path):
-        raise HTTPException(404, f"Dataset '{dataset_name}' not found")
-
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for root, dirs, files in os.walk(folder_path):
+    else:
+        folder_path = os.path.join(DATASET_DIR, dataset_name)
+        if not os.path.isdir(folder_path):
+            raise HTTPException(404, f"Dataset '{dataset_name}' not found")
+        for root, _dirs, files in os.walk(folder_path):
             for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, folder_path)
-                zf.write(file_path, arcname)
-    buffer.seek(0)
-    return StreamingResponse(
-        buffer,
+                path = os.path.join(root, file)
+                entries.append((path, os.path.relpath(path, folder_path)))
+
+    def _build_zip() -> str:
+        fd, tmp_path = tempfile.mkstemp(prefix="mecr_dataset_", suffix=".zip")
+        os.close(fd)
+        try:
+            with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
+                for path, arcname in entries:
+                    zf.write(path, arcname)
+        except Exception:
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+            raise
+        return tmp_path
+
+    zip_path = await run_in_threadpool(_build_zip)
+    filename = "sample_mecr_dataset.zip" if dataset_name == "sample" else f"{dataset_name}.zip"
+    return FileResponse(
+        zip_path,
         media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{dataset_name}.zip"'},
+        filename=filename,
+        background=BackgroundTask(os.remove, zip_path),
     )
 
 
