@@ -27,3 +27,6 @@ datasets
 xgboost
 pandas
 spacy
+
+# PostgreSQL database
+psycopg[binary]

@@ -49,6 +49,13 @@ from services.rules import (
     party_summary,
 )
 
+# PostgreSQL persistence adapter. JSON files remain as a local fallback/backup.
+try:
+    import db_store
+except ImportError:  # Allows legacy/local setups without the adapter file.
+    db_store = None
+
+
 # ---------------------------------------------------------------------------
 # Model Manager — loads active trained models from models_metadata.json
 # When you "Activate" a model in the admin panel, it gets used here.
@@ -459,6 +466,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "https://medcr-website.pages.dev",
         "https://660151e8.medcr-website.pages.dev",
+        "https://7np5rppx-5173.inc1.devtunnels.ms",
     ],
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",  # other Vite dev ports
     allow_credentials=True,
@@ -516,6 +524,10 @@ def _write_json(path: str, data) -> None:
 # In-memory stores (persisted to disk)
 # ---------------------------------------------------------------------------
 USERS: Dict[str, dict] = _read_json(USERS_FILE, {})
+if db_store is not None and db_store.is_configured():
+    # Fail startup if PostgreSQL is configured but unreachable; do not silently
+    # run a deployed service against stale local JSON data.
+    USERS = db_store.load_all()["users"]
 CASES: Dict[str, dict] = {}
 EVIDENCE: Dict[str, dict] = {}
 ANALYSES: Dict[str, dict] = {}  # caseId -> {"results": {...}, "status": ...}
@@ -565,11 +577,17 @@ def require_user(user: dict | None = Depends(get_current_user)) -> dict:
 
 
 def _save_users() -> None:
+    # Keep a local backup for development/recovery, and persist to PostgreSQL
+    # whenever DATABASE_URL is configured.
     _write_json(USERS_FILE, USERS)
+    if db_store is not None and db_store.is_configured():
+        db_store.save_users(USERS)
 
 
 def _save_data() -> None:
     _write_json(DATA_FILE, {"cases": CASES, "evidence": EVIDENCE})
+    if db_store is not None and db_store.is_configured():
+        db_store.save_data(CASES, EVIDENCE)
 
 
 def _first_admin_email() -> Optional[str]:
@@ -593,9 +611,14 @@ def _claim_unowned_cases(email: str) -> int:
 
 
 def _load_data() -> None:
-    data = _read_json(DATA_FILE, {})
-    CASES.update(data.get("cases", {}))
-    EVIDENCE.update(data.get("evidence", {}))
+    if db_store is not None and db_store.is_configured():
+        data = db_store.load_all()
+        CASES.update(data["cases"])
+        EVIDENCE.update(data["evidence"])
+    else:
+        data = _read_json(DATA_FILE, {})
+        CASES.update(data.get("cases", {}))
+        EVIDENCE.update(data.get("evidence", {}))
     default_owner = _first_admin_email()
     if default_owner:
         _claim_unowned_cases(default_owner)

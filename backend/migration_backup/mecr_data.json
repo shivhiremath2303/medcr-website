@@ -1,0 +1,693 @@
+{
+  "cases": {
+    "Crl-MC-1622-2006": {
+      "id": "Crl-MC-1622-2006",
+      "caseNumber": "Crl MC 1622/2006",
+      "court": "High Court of Kerala",
+      "ipcSections": "302, 34, 120B",
+      "defendants": [
+        {
+          "name": "T.R. Ajayan",
+          "role": "Defendant"
+        },
+        {
+          "name": "K. Balan",
+          "role": "Defendant"
+        },
+        {
+          "name": "S. Nair",
+          "role": "Witness"
+        }
+      ],
+      "people": [
+        {
+          "id": "p1",
+          "name": "T.R. Ajayan",
+          "role": "Defendant"
+        },
+        {
+          "id": "p2",
+          "name": "K. Balan",
+          "role": "Defendant"
+        },
+        {
+          "id": "p3",
+          "name": "S. Nair",
+          "role": "Witness"
+        }
+      ],
+      "evidence": [
+        "EV-0114",
+        "EV-0119",
+        "EV-0121",
+        "EV-0122"
+      ],
+      "status": "active",
+      "conflicts": 2,
+      "createdAt": "2026-10-17T12:59:20.201053+00:00",
+      "owner": "admin@mecr.com",
+      "reviews": {},
+      "anomalies": 1
+    },
+    "Crl-A-0451-2011": {
+      "id": "Crl-A-0451-2011",
+      "caseNumber": "Crl A 0451/2011",
+      "court": "High Court of Delhi",
+      "ipcSections": "420, 468",
+      "defendants": [],
+      "people": [],
+      "evidence": [],
+      "status": "active",
+      "conflicts": 0,
+      "createdAt": "2026-10-17T12:59:20.201127+00:00",
+      "owner": "admin@mecr.com"
+    },
+    "Crl-P-0902-2014": {
+      "id": "Crl-P-0902-2014",
+      "caseNumber": "Crl P 0902/2014",
+      "court": "High Court of Madras",
+      "ipcSections": "379, 411",
+      "defendants": [],
+      "people": [],
+      "evidence": [],
+      "status": "archived",
+      "conflicts": 0,
+      "createdAt": "2026-10-17T12:59:20.201152+00:00",
+      "owner": "admin@mecr.com"
+    },
+    "IN-REAL-01": {
+      "id": "IN-REAL-01",
+      "caseNumber": "IN-REAL-01",
+      "court": "High Court (see judgment)",
+      "ipcSections": "See judgment",
+      "defendants": [
+        {
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "people": [
+        {
+          "id": "p1",
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "evidence": [
+        "EV-145",
+        "EV-146",
+        "EV-147",
+        "EV-148"
+      ],
+      "status": "active",
+      "conflicts": 4,
+      "createdAt": "2026-10-20T10:23:20.557450+00:00",
+      "owner": "admin@mecr.com",
+      "reviews": {},
+      "anomalies": 1
+    },
+    "IN-REAL-02": {
+      "id": "IN-REAL-02",
+      "caseNumber": "IN-REAL-02",
+      "court": "High Court of Himachal Pradesh",
+      "ipcSections": "See judgment",
+      "defendants": [
+        {
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "people": [
+        {
+          "id": "p1",
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "evidence": [
+        "EV-149",
+        "EV-150",
+        "EV-151",
+        "EV-152"
+      ],
+      "status": "active",
+      "conflicts": 4,
+      "createdAt": "2026-10-20T10:23:32.910993+00:00",
+      "owner": "admin@mecr.com",
+      "reviews": {},
+      "anomalies": 2
+    },
+    "IN-REAL-01-SVH": {
+      "id": "IN-REAL-01-SVH",
+      "caseNumber": "IN-REAL-01",
+      "court": "High Court (see judgment)",
+      "ipcSections": "See judgment",
+      "defendants": [
+        {
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "people": [
+        {
+          "id": "p1",
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "evidence": [
+        "EV-0153",
+        "EV-0154",
+        "EV-0155",
+        "EV-0156"
+      ],
+      "status": "active",
+      "conflicts": 2,
+      "createdAt": "2026-10-20T11:33:09.929573+00:00",
+      "owner": "svhiramath1@gmail.com"
+    },
+    "IN-REAL-02-SVH": {
+      "id": "IN-REAL-02-SVH",
+      "caseNumber": "IN-REAL-02",
+      "court": "High Court of Himachal Pradesh",
+      "ipcSections": "See judgment",
+      "defendants": [
+        {
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "people": [
+        {
+          "id": "p1",
+          "name": "Party as named in judgment",
+          "role": "Defendant"
+        }
+      ],
+      "evidence": [
+        "EV-0157",
+        "EV-0158",
+        "EV-0159",
+        "EV-0160"
+      ],
+      "status": "active",
+      "conflicts": 2,
+      "createdAt": "2026-10-20T11:33:09.929805+00:00",
+      "owner": "svhiramath1@gmail.com"
+    }
+  },
+  "evidence": {
+    "EV-0114": {
+      "id": "EV-0114",
+      "name": "CCTV footage.jpg",
+      "kind": "image",
+      "type": "image/jpeg",
+      "linkedTo": "p2",
+      "caseId": "Crl-MC-1622-2006",
+      "uploadedAt": "2026-10-17T12:59:20.201197+00:00",
+      "demo": true
+    },
+    "EV-0119": {
+      "id": "EV-0119",
+      "name": "Fuel receipt.jpg",
+      "kind": "image",
+      "type": "image/jpeg",
+      "linkedTo": "p2",
+      "caseId": "Crl-MC-1622-2006",
+      "uploadedAt": "2026-10-17T12:59:20.201211+00:00",
+      "demo": true
+    },
+    "EV-0121": {
+      "id": "EV-0121",
+      "name": "Call records.pdf",
+      "kind": "pdf",
+      "type": "application/pdf",
+      "linkedTo": "p1",
+      "caseId": "Crl-MC-1622-2006",
+      "uploadedAt": "2026-10-17T12:59:20.201222+00:00",
+      "demo": true
+    },
+    "EV-0122": {
+      "id": "EV-0122",
+      "name": "Witness statement.mp3",
+      "kind": "audio",
+      "type": "audio/mpeg",
+      "linkedTo": "p3",
+      "caseId": "Crl-MC-1622-2006",
+      "uploadedAt": "2026-10-17T12:59:20.201231+00:00",
+      "demo": true
+    },
+    "EV-145": {
+      "id": "EV-145",
+      "name": "Judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-01",
+      "uploadedAt": "2026-10-20T10:23:22.619816+00:00",
+      "rawText": "In para 7 the Division Bench has observed and held as under:\n [7.0] In view of the above, it cannot be said that the learned Single Judge has committed any error in directing the appellants to consider the previous service of the original petitioner i.e. for the period between 27.06.1968 to 17.11.1969 and 15.06.1970 to 30.06.1975 for computing the length of qualifying service for pension.",
+      "charCount": 391,
+      "entities": [
+        {
+          "text": "27.06.1968",
+          "type": "DATE",
+          "start": 278,
+          "end": 288
+        },
+        {
+          "text": "17.11.1969",
+          "type": "DATE",
+          "start": 292,
+          "end": 302
+        },
+        {
+          "text": "15.06.1970",
+          "type": "DATE",
+          "start": 307,
+          "end": 317
+        },
+        {
+          "text": "30.06.1975",
+          "type": "DATE",
+          "start": 321,
+          "end": 331
+        }
+      ]
+    },
+    "EV-146": {
+      "id": "EV-146",
+      "name": "Related judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-01",
+      "uploadedAt": "2026-10-20T10:23:24.669760+00:00",
+      "rawText": "The contention raised on behalf of the respondent-KPT that the validity of the order dated 14th September, 2018 is required to be considered by the Court on merits then in such circumstances when both the orders dated 6th July, 2017 and 14th September, 2018 pertain to removal from service and dismissal from service, the petitioner could not have been removed or dismissed from the service twice. \n\n9.14",
+      "charCount": 404,
+      "entities": [
+        {
+          "text": "KPT",
+          "type": "RESPONDENT",
+          "start": 50,
+          "end": 53
+        },
+        {
+          "text": "14th September, 2018",
+          "type": "DATE",
+          "start": 91,
+          "end": 111
+        },
+        {
+          "text": "6th July, 2017",
+          "type": "DATE",
+          "start": 218,
+          "end": 232
+        },
+        {
+          "text": "14th September, 2018",
+          "type": "DATE",
+          "start": 237,
+          "end": 257
+        }
+      ]
+    },
+    "EV-147": {
+      "id": "EV-147",
+      "name": "Witness note.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-01",
+      "uploadedAt": "2026-10-20T10:23:26.726310+00:00",
+      "rawText": "Witness statement recorded on oath: for the period between 27/06/1967 to 17.11.1969 and 15.06.1970 to 30.06.1975 for computing the length of qualifying service for pension. The witness affirmed this account under cross-examination.",
+      "charCount": 231,
+      "entities": []
+    },
+    "EV-148": {
+      "id": "EV-148",
+      "name": "Case diary (damaged scan).txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-01",
+      "uploadedAt": "2026-10-20T10:23:28.772184+00:00",
+      "rawText": "SCANNED CASE DIARY - OCR PARTIAL\n\nIn para 7 the Division Bench has observed and held as under: [7.0] In view of the above, it cannot be said that the learned Single Judge has committed any error in\n\n[REDACTED]",
+      "charCount": 209,
+      "entities": []
+    },
+    "EV-149": {
+      "id": "EV-149",
+      "name": "Judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02",
+      "uploadedAt": "2026-10-20T10:23:34.982454+00:00",
+      "rawText": "On merits, it is stated by the respondents that the petitioner had submitted an application dated 14/06/2017 before the DIG, Stamps for calculation and deposition of (7 of 18) [CW-7904/2018] stamp duty on the basis of valuation of amalgamation order dated 05/01/2011 passed by the High Court of Himachal Pradesh whereafter the case was registered and a detailed order was passed on 07/03/2018 ordering for depositing the amount as above.",
+      "charCount": 437,
+      "entities": [
+        {
+          "text": "14/06/2017",
+          "type": "DATE",
+          "start": 98,
+          "end": 108
+        },
+        {
+          "text": "05/01/2011",
+          "type": "DATE",
+          "start": 256,
+          "end": 266
+        },
+        {
+          "text": "High Court of Himachal Pradesh",
+          "type": "COURT",
+          "start": 281,
+          "end": 311
+        },
+        {
+          "text": "07/03/2018",
+          "type": "DATE",
+          "start": 382,
+          "end": 392
+        }
+      ]
+    },
+    "EV-150": {
+      "id": "EV-150",
+      "name": "Related judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02",
+      "uploadedAt": "2026-10-20T10:23:37.062458+00:00",
+      "rawText": "As per sub-section (1) of Section 3 of the Relaxation Act, 2020 the time limits specified in the specified Acts which fell during the period from 20.03.2020 to 31.12.2020 or such other date after 31.12.2020 as the Central Government may notify, were extended to 31.03.2021 or such other date after 31.03.2021 as the Central Government may by notification specify.",
+      "charCount": 363,
+      "entities": [
+        {
+          "text": "sub-section (1) of Section 3",
+          "type": "PROVISION",
+          "start": 7,
+          "end": 35
+        },
+        {
+          "text": "Relaxation Act, 2020",
+          "type": "STATUTE",
+          "start": 43,
+          "end": 63
+        },
+        {
+          "text": "20.03.2020",
+          "type": "DATE",
+          "start": 146,
+          "end": 156
+        },
+        {
+          "text": "31.12.2020",
+          "type": "DATE",
+          "start": 160,
+          "end": 170
+        },
+        {
+          "text": "31.12.2020",
+          "type": "DATE",
+          "start": 196,
+          "end": 206
+        },
+        {
+          "text": "Central Government",
+          "type": "ORG",
+          "start": 214,
+          "end": 232
+        },
+        {
+          "text": "31.03.2021",
+          "type": "DATE",
+          "start": 262,
+          "end": 272
+        },
+        {
+          "text": "31.03.2021",
+          "type": "DATE",
+          "start": 298,
+          "end": 308
+        },
+        {
+          "text": "Central Government",
+          "type": "ORG",
+          "start": 316,
+          "end": 334
+        }
+      ]
+    },
+    "EV-151": {
+      "id": "EV-151",
+      "name": "Witness note.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02",
+      "uploadedAt": "2026-10-20T10:23:39.114663+00:00",
+      "rawText": "Witness statement recorded on oath: On merits, it is stated by the respondents that the petitioner had submitted an application dated 14/06/2016 before the DIG, Stamps for calculation and deposition of (7 of 18) [CW-7904/2018] stamp duty on the basis of valuation of amalgamation order dated 05/01/2011 passed by the High Court of Himachal Pradesh whereafter the case was registered and a detailed order was passed on 07/03/2018 ordering for depositing the amount as above. The witness affirmed this account under cross-examination.",
+      "charCount": 532,
+      "entities": []
+    },
+    "EV-152": {
+      "id": "EV-152",
+      "name": "Case diary (damaged scan).txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02",
+      "uploadedAt": "2026-10-20T10:23:41.181189+00:00",
+      "rawText": "SCANNED CASE DIARY - OCR PARTIAL\n\nOn merits, it is stated by the respondents that the petitioner had submitted an application dated 14/06/2017 before the DIG, Stamps for calculation and deposition of (7 of 18) [CW-790\n\n[REDACTED]",
+      "charCount": 229,
+      "entities": []
+    },
+    "EV-0153": {
+      "id": "EV-0153",
+      "name": "Judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": "p1",
+      "caseId": "IN-REAL-01-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929343+00:00",
+      "rawText": "In para 7 the Division Bench has observed and held as under:\n [7.0] In view of the above, it cannot be said that the learned Single Judge has committed any error in directing the appellants to consider the previous service of the original petitioner i.e. for the period between 27.06.1968 to 17.11.1969 and 15.06.1970 to 30.06.1975 for computing the length of qualifying service for pension.",
+      "charCount": 391,
+      "entities": [
+        {
+          "text": "27.06.1968",
+          "type": "DATE",
+          "start": 278,
+          "end": 288
+        },
+        {
+          "text": "17.11.1969",
+          "type": "DATE",
+          "start": 292,
+          "end": 302
+        },
+        {
+          "text": "15.06.1970",
+          "type": "DATE",
+          "start": 307,
+          "end": 317
+        },
+        {
+          "text": "30.06.1975",
+          "type": "DATE",
+          "start": 321,
+          "end": 331
+        }
+      ]
+    },
+    "EV-0154": {
+      "id": "EV-0154",
+      "name": "Related judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": "p1",
+      "caseId": "IN-REAL-01-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929524+00:00",
+      "rawText": "The contention raised on behalf of the respondent-KPT that the validity of the order dated 14th September, 2018 is required to be considered by the Court on merits then in such circumstances when both the orders dated 6th July, 2017 and 14th September, 2018 pertain to removal from service and dismissal from service, the petitioner could not have been removed or dismissed from the service twice. \n\n9.14",
+      "charCount": 404,
+      "entities": [
+        {
+          "text": "KPT",
+          "type": "RESPONDENT",
+          "start": 50,
+          "end": 53
+        },
+        {
+          "text": "14th September, 2018",
+          "type": "DATE",
+          "start": 91,
+          "end": 111
+        },
+        {
+          "text": "6th July, 2017",
+          "type": "DATE",
+          "start": 218,
+          "end": 232
+        },
+        {
+          "text": "14th September, 2018",
+          "type": "DATE",
+          "start": 237,
+          "end": 257
+        }
+      ]
+    },
+    "EV-0155": {
+      "id": "EV-0155",
+      "name": "Witness note.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": "p1",
+      "caseId": "IN-REAL-01-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929554+00:00",
+      "rawText": "Witness statement recorded on oath: for the period between 27/06/1967 to 17.11.1969 and 15.06.1970 to 30.06.1975 for computing the length of qualifying service for pension. The witness affirmed this account under cross-examination.",
+      "charCount": 231,
+      "entities": []
+    },
+    "EV-0156": {
+      "id": "EV-0156",
+      "name": "Case diary (damaged scan).txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": "p1",
+      "caseId": "IN-REAL-01-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929563+00:00",
+      "rawText": "SCANNED CASE DIARY - OCR PARTIAL\n\nIn para 7 the Division Bench has observed and held as under: [7.0] In view of the above, it cannot be said that the learned Single Judge has committed any error in\n\n[REDACTED]",
+      "charCount": 209,
+      "entities": []
+    },
+    "EV-0157": {
+      "id": "EV-0157",
+      "name": "Judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929671+00:00",
+      "rawText": "On merits, it is stated by the respondents that the petitioner had submitted an application dated 14/06/2017 before the DIG, Stamps for calculation and deposition of (7 of 18) [CW-7904/2018] stamp duty on the basis of valuation of amalgamation order dated 05/01/2011 passed by the High Court of Himachal Pradesh whereafter the case was registered and a detailed order was passed on 07/03/2018 ordering for depositing the amount as above.",
+      "charCount": 437,
+      "entities": [
+        {
+          "text": "14/06/2017",
+          "type": "DATE",
+          "start": 98,
+          "end": 108
+        },
+        {
+          "text": "05/01/2011",
+          "type": "DATE",
+          "start": 256,
+          "end": 266
+        },
+        {
+          "text": "High Court of Himachal Pradesh",
+          "type": "COURT",
+          "start": 281,
+          "end": 311
+        },
+        {
+          "text": "07/03/2018",
+          "type": "DATE",
+          "start": 382,
+          "end": 392
+        }
+      ]
+    },
+    "EV-0158": {
+      "id": "EV-0158",
+      "name": "Related judgment extract.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929682+00:00",
+      "rawText": "As per sub-section (1) of Section 3 of the Relaxation Act, 2020 the time limits specified in the specified Acts which fell during the period from 20.03.2020 to 31.12.2020 or such other date after 31.12.2020 as the Central Government may notify, were extended to 31.03.2021 or such other date after 31.03.2021 as the Central Government may by notification specify.",
+      "charCount": 363,
+      "entities": [
+        {
+          "text": "sub-section (1) of Section 3",
+          "type": "PROVISION",
+          "start": 7,
+          "end": 35
+        },
+        {
+          "text": "Relaxation Act, 2020",
+          "type": "STATUTE",
+          "start": 43,
+          "end": 63
+        },
+        {
+          "text": "20.03.2020",
+          "type": "DATE",
+          "start": 146,
+          "end": 156
+        },
+        {
+          "text": "31.12.2020",
+          "type": "DATE",
+          "start": 160,
+          "end": 170
+        },
+        {
+          "text": "31.12.2020",
+          "type": "DATE",
+          "start": 196,
+          "end": 206
+        },
+        {
+          "text": "Central Government",
+          "type": "ORG",
+          "start": 214,
+          "end": 232
+        },
+        {
+          "text": "31.03.2021",
+          "type": "DATE",
+          "start": 262,
+          "end": 272
+        },
+        {
+          "text": "31.03.2021",
+          "type": "DATE",
+          "start": 298,
+          "end": 308
+        },
+        {
+          "text": "Central Government",
+          "type": "ORG",
+          "start": 316,
+          "end": 334
+        }
+      ]
+    },
+    "EV-0159": {
+      "id": "EV-0159",
+      "name": "Witness note.txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929693+00:00",
+      "rawText": "Witness statement recorded on oath: On merits, it is stated by the respondents that the petitioner had submitted an application dated 14/06/2016 before the DIG, Stamps for calculation and deposition of (7 of 18) [CW-7904/2018] stamp duty on the basis of valuation of amalgamation order dated 05/01/2011 passed by the High Court of Himachal Pradesh whereafter the case was registered and a detailed order was passed on 07/03/2018 ordering for depositing the amount as above. The witness affirmed this account under cross-examination.",
+      "charCount": 532,
+      "entities": []
+    },
+    "EV-0160": {
+      "id": "EV-0160",
+      "name": "Case diary (damaged scan).txt",
+      "kind": "text",
+      "type": "text/plain",
+      "linkedTo": null,
+      "caseId": "IN-REAL-02-SVH",
+      "uploadedAt": "2026-10-20T11:33:09.929757+00:00",
+      "rawText": "SCANNED CASE DIARY - OCR PARTIAL\n\nOn merits, it is stated by the respondents that the petitioner had submitted an application dated 14/06/2017 before the DIG, Stamps for calculation and deposition of (7 of 18) [CW-790\n\n[REDACTED]",
+      "charCount": 229,
+      "entities": []
+    }
+  }
+}
