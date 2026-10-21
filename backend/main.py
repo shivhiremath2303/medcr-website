@@ -28,13 +28,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse, Response
 from pydantic import BaseModel
 
-# Training service imports
-from services.training_service import (
-    train_bilstm_crf,
-    train_xgboost_anomaly,
-    train_legalbert_contradiction,
-    train_rgcn,
-)
 from services.dataset_service import (
     extract_zip,
     list_datasets,
@@ -59,20 +52,11 @@ from services.rules import (
 # ---------------------------------------------------------------------------
 # Model Manager — loads active trained models from models_metadata.json
 # When you "Activate" a model in the admin panel, it gets used here.
+#
+# Heavy ML libraries (torch, transformers, xgboost, torch_geometric) and the
+# training service are imported lazily inside the methods that need them so
+# FastAPI can start without loading the whole dependency tree.
 # ---------------------------------------------------------------------------
-
-import torch
-import torch.nn as nn
-try:
-    from torchcrf import CRF  # type: ignore
-except ImportError:
-    from TorchCRF import CRF  # type: ignore
-from transformers import AutoTokenizer, AutoModelForSequenceClassification  # type: ignore
-import xgboost as xgb  # type: ignore
-from torch_geometric.data import Data  # type: ignore
-from torch_geometric.loader import DataLoader as PyGDataLoader  # type: ignore
-import torch.nn.functional as F  # type: ignore
-import numpy as np  # type: ignore
 
 
 class ModelManager:
@@ -107,6 +91,8 @@ class ModelManager:
 
     # ----- BiLSTM-CRF NER -----
     def get_bilstm_crf(self):
+        import torch
+
         if self._bilstm_crf is not None:
             return self._bilstm_crf, self._word2idx, self._tag2idx, self._idx2tag
         path = self._get_active_path("bilstm_crf")
@@ -139,6 +125,8 @@ class ModelManager:
 
     # ----- XGBoost Anomaly -----
     def get_xgboost(self):
+        import xgboost as xgb
+
         if self._xgboost is not None:
             return self._xgboost
         path = self._get_active_path("xgboost")
@@ -155,6 +143,11 @@ class ModelManager:
 
     # ----- LegalBERT Contradiction -----
     def get_legalbert(self):
+        from transformers import (
+            AutoTokenizer,
+            AutoModelForSequenceClassification,
+        )
+
         if self._legalbert is not None:
             return self._legalbert
         path = self._get_active_path("legalbert")
@@ -172,6 +165,8 @@ class ModelManager:
 
     # ----- R-GCN -----
     def get_rgcn(self):
+        import torch
+
         if self._rgcn is not None:
             return self._rgcn
         path = self._get_active_path("rgcn")
@@ -221,6 +216,8 @@ model_manager = ModelManager()
 # ----- BiLSTM-CRF NER inference -----
 def run_bilstm_crf_ner(text: str):
     """Run BiLSTM-CRF NER over long documents using overlapping windows."""
+    import torch
+
     model, word2idx, tag2idx, idx2tag = model_manager.get_bilstm_crf()
     if model is None:
         return None
@@ -324,6 +321,8 @@ def _normalize_claim(text: str) -> str:
 
 def run_legalbert_contradiction(statement_a: str, statement_b: str):
     """Run LegalBERT contradiction detection. Returns (is_contradiction, confidence, explanation)."""
+    import torch
+
     result = model_manager.get_legalbert()
     if result is None:
         return None
@@ -378,6 +377,8 @@ def run_xgboost_anomaly(text: str, entities: Optional[list] = None):
 # ----- R-GCN -----
 def run_rgcn_graph(entities: list, text_len: int = 0):
     """Run R-GCN on the entity graph. Returns a React-Flow compatible graph."""
+    import torch
+
     model = model_manager.get_rgcn()
     if model is None or len(entities) < 1:
         return None
@@ -2196,16 +2197,24 @@ async def admin_train_model(model_type: str, body: TrainRequest, user: dict = De
             TRAINING_JOBS[job_id]["status"] = "running"
 
             if model_type == "bilstm_crf":
+                from services.training_service import train_bilstm_crf
+
                 epochs = body.epochs or 5
                 result = train_bilstm_crf(dataset_name, epochs=epochs)
             elif model_type == "xgboost":
+                from services.training_service import train_xgboost_anomaly
+
                 result = train_xgboost_anomaly(dataset_name, max_docs=10000)
             elif model_type == "legalbert":
+                from services.training_service import train_legalbert_contradiction
+
                 epochs = body.epochs or 1
                 result = train_legalbert_contradiction(
                     dataset_name, epochs=epochs, max_train=18000, max_test=2100
                 )
             elif model_type == "rgcn":
+                from services.training_service import train_rgcn
+
                 epochs = body.epochs or 40
                 result = train_rgcn(dataset_name, epochs=epochs, max_docs=8000)
 
