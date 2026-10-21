@@ -454,7 +454,12 @@ app = FastAPI(title="MECR Backend", version="0.5.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",  # Vite dev ports
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://medcr-website.pages.dev",
+    ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",  # other Vite dev ports
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
