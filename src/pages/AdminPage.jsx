@@ -168,7 +168,13 @@ export default function AdminPage() {
       const result = await adminFetchDataset(datasetName, { force })
       await load()
       const count = result.dataset?.records ?? result.dataset?.train_records ?? 0
-      setInfo(`${datasetName} ready — ${count} records`)
+      setInfo(`${datasetName} ready — ${count} records. Preparing ZIP download…`)
+      try {
+        await adminDownloadDataset(datasetName)
+        setInfo(`${datasetName} ready — ${count} records. ZIP downloaded.`)
+      } catch (downloadErr) {
+        setError(`Dataset is ready, but the ZIP download failed: ${downloadErr.message}`)
+      }
     } catch (err) {
       setError(err.message)
       setInfo('')
@@ -479,8 +485,8 @@ function DatasetsTab({ datasets, uploadFile, setUploadFile, uploadingDataset, ha
       <Card className="p-5">
         <h3 className="font-serif font-semibold text-ink mb-3">Download Large Public Datasets</h3>
         <p className="text-textsoft text-sm mb-4">
-          One click downloads the datasets straight from Hugging Face and prepares them for training.
-          These are the datasets that produced the high-accuracy models.
+          One click downloads the datasets straight from Hugging Face, prepares them for training,
+          and saves a ZIP copy to your computer. These are the datasets that produced the high-accuracy models.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(catalog.length ? catalog : Object.keys(PUBLIC_DATASETS).map((name) => ({ name, built: false }))).map((item) => {
