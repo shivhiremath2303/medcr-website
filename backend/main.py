@@ -515,6 +515,17 @@ async def health():
     return {"status": "ok", "service": "mecr-backend", "version": app.version}
 
 
+@app.get("/v1/models", include_in_schema=False)
+async def openai_compatible_models_probe():
+    """Discovery stub for local OpenAI-compatible clients.
+
+    Desktop tools (e.g. the OpenCode app) probe /health and /v1/models on
+    common local ports to detect model servers. MECR does not serve an LLM, so
+    answer with an empty OpenAI-style model list instead of logging 404s.
+    """
+    return {"object": "list", "data": []}
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
