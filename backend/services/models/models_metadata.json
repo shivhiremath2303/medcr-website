@@ -177,7 +177,8 @@
       "evaluation": "random 10% split",
       "max_len": 128,
       "model_path": "C:\\Users\\LENOVO\\OneDrive\\Documents\\MECR-Frontend-main\\backend\\services\\models\\bilstm_crf_sample.pth",
-      "trained_at": "2026-10-21T19:05:51.486655"
+      "trained_at": "2026-10-21T20:45:35.336136",
+      "active": false
     }
   ],
   "xgboost": [
