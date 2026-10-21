@@ -1,9 +1,29 @@
+# Web / API
 fastapi
 uvicorn[standard]
 pydantic
+python-multipart
+
+# Reporting
 reportlab
+
+# Document & image extraction (core formats)
 numpy
 Pillow
+pypdf
+python-docx
+
+# Forgery screening model
 scikit-image
 scikit-learn
 joblib
+
+# ML models & training (imported by main.py and training_service.py)
+torch
+torch-geometric
+torchcrf
+transformers
+datasets
+xgboost
+pandas
+spacy
