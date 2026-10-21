@@ -10,6 +10,7 @@ import CaseDetail from './pages/CaseDetail'
 import CaseUpload from './pages/CaseUpload'
 import CaseAnalysis from './pages/CaseAnalysis'
 import AdminPage from './pages/AdminPage'
+import ForgeryCheck from './pages/ForgeryCheck'
 import { getToken, isAdmin } from './lib/api'
 
 function isAuthed() {
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="cases/:caseId/upload" element={<CaseUpload />} />
         <Route path="cases/:caseId/analysis" element={<CaseAnalysis />} />
         <Route path="admin" element={<AdminPage />} />
+        <Route path="forgery-check" element={<ForgeryCheck />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

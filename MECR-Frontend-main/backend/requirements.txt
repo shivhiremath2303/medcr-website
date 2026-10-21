@@ -2,3 +2,8 @@ fastapi
 uvicorn[standard]
 pydantic
 reportlab
+numpy
+Pillow
+scikit-image
+scikit-learn
+joblib

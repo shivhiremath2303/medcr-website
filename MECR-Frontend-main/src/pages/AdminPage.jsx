@@ -703,7 +703,7 @@ function ModelsTab({ models, activateModel }) {
               <table className="w-full text-sm">
                 <thead>
                 <tr className="border-b border-line">
-                  {['Dataset', 'Accuracy', 'Extra metric', 'Samples', 'Status'].map((h) => (
+                  {['Dataset', 'Accuracy', 'Extra metric', '5-fold CV', 'Samples', 'Status'].map((h) => (
                     <th key={h} className="text-left text-[11px] uppercase tracking-wide text-textsoft font-semibold px-3 py-2">{h}</th>
                   ))}
                 </tr>
@@ -717,6 +717,11 @@ function ModelsTab({ models, activateModel }) {
                       {v.entity_f1 != null ? `F1 ${v.entity_f1}` :
                         v.f1 != null ? `F1 ${v.f1}` :
                         v.roc_auc != null ? `AUC ${v.roc_auc}` : '—'}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-[11px] text-textsoft" title={v.cv?.evaluation || ''}>
+                      {v.cv
+                        ? `${v.cv.accuracy_mean}% ± ${v.cv.accuracy_std} (F1 ${v.cv.entity_f1_mean})`
+                        : '—'}
                     </td>
                     <td className="px-3 py-2 text-textsoft">{v.samples ?? 'N/A'}</td>
                     <td className="px-3 py-2 whitespace-nowrap">

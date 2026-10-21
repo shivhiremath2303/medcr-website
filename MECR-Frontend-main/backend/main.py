@@ -2533,6 +2533,156 @@ async def get_evidence_file(evidence_id: str, user: dict = Depends(require_user)
 
 
 # ---------------------------------------------------------------------------
+# Forgery detection — secondary experimental screening feature
+# Model lives entirely on the backend; the .joblib file is never exposed.
+# ---------------------------------------------------------------------------
+
+MAX_FORGERY_UPLOAD_BYTES = 25 * 1024 * 1024
+
+
+def _run_forgery_inference(image_bytes: bytes) -> dict:
+    """Lazy-load the inference module and run predict_document.
+
+    Wrapped in a helper so startup is not blocked by model loading.
+    Any failure returns a structured error dict instead of crashing.
+    """
+    try:
+        import inference as _inference  # noqa: PLC0415
+        return _inference.predict_document(image_bytes)
+    except FileNotFoundError:
+        return {
+            "result": None,
+            "error_code": "model_missing",
+            "error": "Forgery model is not available on this server. Please contact the administrator.",
+        }
+    except ImportError:
+        return {
+            "result": None,
+            "error_code": "dependency_missing",
+            "error": "Forgery screening dependencies are not installed on this server.",
+        }
+    except ValueError as exc:
+        detail = str(exc) or "Invalid or unreadable image file."
+        if not detail.lower().startswith("invalid or unreadable"):
+            detail = f"Invalid or unreadable image file: {detail}"
+        return {
+            "result": None,
+            "error_code": "invalid_image",
+            "error": detail,
+        }
+    except Exception:  # noqa: BLE001
+        # Do not leak model internals or stack traces to the client.
+        return {
+            "result": None,
+            "error_code": "prediction_failed",
+            "error": "The forgery model could not process this image. Please try another image.",
+        }
+
+
+def _forgery_http_error(result: dict) -> HTTPException:
+    """Map an internal forgery failure to a safe HTTP response."""
+    code = result.get("error_code")
+    status = {
+        "invalid_image": 422,
+        "model_missing": 503,
+        "dependency_missing": 503,
+    }.get(code, 500)
+    return HTTPException(status_code=status, detail=result.get("error"))
+
+
+@app.post("/api/v1/forgery/check")
+async def forgery_check_upload(
+    file: UploadFile = File(...),
+    user: dict = Depends(require_user),
+):
+    """Accept a directly-uploaded image and run forgery screening.
+
+    This endpoint is the primary entry-point for the standalone forgery
+    screening tool.  The model and bundle stay server-side at all times.
+    """
+    ALLOWED_IMAGE_TYPES = {
+        "image/jpeg", "image/jpg", "image/png", "image/tiff",
+        "image/bmp", "image/webp", "image/gif",
+    }
+    ct = (file.content_type or "").lower()
+    fn = (file.filename or "").lower()
+    is_image_ct = ct in ALLOWED_IMAGE_TYPES
+    is_image_ext = fn.endswith((".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".webp", ".gif"))
+
+    if not is_image_ct and not is_image_ext:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Only image files are supported for forgery screening "
+                "(JPEG, PNG, TIFF, BMP, WebP)."
+            ),
+        )
+
+    try:
+        payload = await file.read()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read uploaded file.")
+
+    if not payload:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+    if len(payload) > MAX_FORGERY_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail="Image is too large for forgery screening (maximum 25 MB).",
+        )
+
+    result = _run_forgery_inference(payload)
+    if result.get("error"):
+        raise _forgery_http_error(result)
+
+    return {
+        "filename": file.filename,
+        **result,
+    }
+
+
+@app.get("/api/v1/evidence/{evidence_id}/forgery-check")
+async def forgery_check_evidence(
+    evidence_id: str,
+    user: dict = Depends(require_user),
+):
+    """Run forgery screening against a previously-uploaded evidence image.
+
+    Reads the saved file from UPLOADS_DIR — the model file is never sent
+    to the client.
+    """
+    ev = _owned_evidence(evidence_id, user)
+    if ev.get("kind") != "image":
+        raise HTTPException(
+            status_code=422,
+            detail="Forgery screening is only available for image evidence.",
+        )
+
+    path = ev.get("filePath")
+    if not path or not os.path.exists(path):
+        raise HTTPException(
+            status_code=404,
+            detail="Original image file is not available for screening.",
+        )
+
+    try:
+        with open(path, "rb") as fh:
+            payload = fh.read()
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"Could not read evidence file: {exc}")
+
+    result = _run_forgery_inference(payload)
+    if result.get("error"):
+        raise _forgery_http_error(result)
+
+    return {
+        "evidenceId": evidence_id,
+        "filename": ev.get("name"),
+        **result,
+    }
+
+
+# ---------------------------------------------------------------------------
 # AI processing — SSE stream of pipeline stages
 # ---------------------------------------------------------------------------
 @app.post("/api/v1/analysis/run/{case_id}")

@@ -195,6 +195,28 @@ export async function getDocumentAnalysis(evidenceId) {
   return json(res)
 }
 
+// --- Forgery screening (secondary experimental feature) --------------------
+
+/** Run forgery screening on an already-uploaded evidence item (image only). */
+export async function checkForgery(evidenceId) {
+  const res = await fetch(`${BASE_URL}/evidence/${evidenceId}/forgery-check`, {
+    headers: authHeaders(),
+  })
+  return json(res)
+}
+
+/** Upload a fresh image directly for forgery screening (standalone tool). */
+export async function checkForgeryDirect(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch(`${BASE_URL}/forgery/check`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: formData,
+  })
+  return json(res)
+}
+
 // --- AI processing ----------------------------------------------------------
 
 export async function runAnalysis(caseId, onStatus) {
@@ -243,6 +265,20 @@ export async function getGraph(caseId) {
 
 export async function getEntities(caseId) {
   const res = await fetch(`${BASE_URL}/cases/${caseId}/entities`, { headers: authHeaders() })
+  return json(res)
+}
+
+export async function getParties(caseId) {
+  const res = await fetch(`${BASE_URL}/cases/${caseId}/parties`, { headers: authHeaders() })
+  return json(res)
+}
+
+export async function reviewFinding(caseId, findingId, status) {
+  const res = await fetch(`${BASE_URL}/cases/${caseId}/review/${findingId}`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
   return json(res)
 }
 

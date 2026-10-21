@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteEvidence, getCase, runAnalysis, tagEvidence } from '../lib/api'
+import { deleteEvidence, getCase, runAnalysis, tagEvidence, checkForgery } from '../lib/api'
 import { Badge, Button, Card, Eyebrow } from '../components/ui/Primitives'
 
 export default function CaseDetail() {
@@ -9,6 +9,8 @@ export default function CaseDetail() {
   const [running, setRunning] = useState(false)
   const [stage, setStage] = useState('')
   const [error, setError] = useState('')
+  const [forgeryResults, setForgeryResults] = useState({})
+  const [forgeryLoading, setForgeryLoading] = useState({})
   const navigate = useNavigate()
 
   async function load() {
@@ -32,6 +34,18 @@ export default function CaseDetail() {
   async function removeEvidence(id) {
     await deleteEvidence(id)
     load()
+  }
+
+  async function handleScreen(evidenceId) {
+    setForgeryLoading((p) => ({ ...p, [evidenceId]: true }))
+    try {
+      const data = await checkForgery(evidenceId)
+      setForgeryResults((p) => ({ ...p, [evidenceId]: data }))
+    } catch (e) {
+      setForgeryResults((p) => ({ ...p, [evidenceId]: { error: e.message } }))
+    } finally {
+      setForgeryLoading((p) => ({ ...p, [evidenceId]: false }))
+    }
   }
 
   async function handleAnalyze() {
@@ -103,7 +117,7 @@ export default function CaseDetail() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-line">
-              {['ID', 'Name', 'Kind', 'Linked to', ''].map((h) => (
+              {['ID', 'Name', 'Kind', 'Linked to', 'Forgery Screen (exp.)', ''].map((h) => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-textsoft font-semibold px-3 py-2.5">{h}</th>
               ))}
             </tr>
@@ -124,18 +138,57 @@ export default function CaseDetail() {
                     {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </td>
+                <td className="px-3 py-2.5">
+                  {ev.kind === 'image' ? (
+                    <div className="min-w-[130px]">
+                      {!forgeryResults[ev.id] && (
+                        <button
+                          id={`forgery-screen-${ev.id}`}
+                          onClick={() => handleScreen(ev.id)}
+                          disabled={!!forgeryLoading[ev.id]}
+                          className="text-[11px] font-mono px-2.5 py-1 rounded border border-line text-textsoft hover:text-ink hover:border-gold transition-colors disabled:opacity-50"
+                        >
+                          {forgeryLoading[ev.id] ? 'Screening…' : '⬡ Screen'}
+                        </button>
+                      )}
+                      {forgeryResults[ev.id] && (() => {
+                        const r = forgeryResults[ev.id]
+                        if (r.error) return <span className="text-[11px] font-mono text-conflict" title={r.error}>Error</span>
+                        const tone = r.raw_result === 'LIKELY AUTHENTIC' ? 'verified'
+                          : r.raw_result === 'POTENTIALLY TAMPERED' ? 'conflict' : 'gold'
+                        return (
+                          <div className="flex items-center gap-1.5" title={r.disclaimer || 'Experimental screening only — not proof of authenticity.'}>
+                            <Badge tone={tone}>{r.result}</Badge>
+                            <button
+                              onClick={() => handleScreen(ev.id)}
+                              disabled={!!forgeryLoading[ev.id]}
+                              title="Re-screen"
+                              className="text-[10px] text-textsoft hover:text-ink"
+                            >↻</button>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  ) : (
+                    <span className="text-[11px] font-mono text-textsoft/50">—</span>
+                  )}
+                </td>
                 <td className="px-3 py-2.5 text-right">
                   <button onClick={() => removeEvidence(ev.id)} className="text-xs text-textsoft hover:text-conflict">Delete</button>
                 </td>
               </tr>
             ))}
             {evidence.length === 0 && (
-              <tr><td colSpan={5} className="px-3 py-6 text-center text-sm text-textsoft">
+              <tr><td colSpan={6} className="px-3 py-6 text-center text-sm text-textsoft">
                 No evidence yet. <Link to={`/cases/${caseId}/upload`} className="text-gold font-semibold">Upload some</Link>.
               </td></tr>
             )}
           </tbody>
         </table>
+        <p className="mt-3 px-1 text-[11px] text-textsoft border-l-2 border-gold pl-3">
+          Forgery screening is an experimental, secondary signal. It is not proof of
+          authenticity or tampering and must be verified against original records.
+        </p>
       </Card>
     </div>
   )

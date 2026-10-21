@@ -25,6 +25,23 @@ npm run dev
 
 Visit `http://localhost:5173`.
 
+### Forgery screening (experimental, secondary)
+
+The backend loads `backend/forgery_detector_bundle.joblib` through
+`backend/inference.py` and exposes it only through authenticated API routes.
+The model file is never sent to the browser.
+
+- Standalone screen: **Forgery Screen** in the sidebar, backed by
+  `POST /api/v1/forgery/check`.
+- Uploaded exhibit screen: the **Screen** action on an image row in a case,
+  backed by `GET /api/v1/evidence/{evidence_id}/forgery-check`.
+
+Results are one of **Likely Authentic**, **Potentially Tampered**, or
+**Review Required**. This is an experimental decision-support signal
+(held-out accuracy 73.89%, ROC-AUC 0.7954 on the model's own test split), not
+proof of authenticity or forgery. See `FORGERY_INTEGRATION.md` for the full
+integration and test notes.
+
 Seeded administrator: `admin@mecr.com` / `Admin@1234`. On a fresh install the
 first registered account becomes an administrator; later accounts are regular
 users and must verify their email (the development verification code is returned

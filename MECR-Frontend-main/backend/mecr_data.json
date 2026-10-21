@@ -45,7 +45,9 @@
       "status": "active",
       "conflicts": 2,
       "createdAt": "2026-10-17T12:59:20.201053+00:00",
-      "owner": "admin@mecr.com"
+      "owner": "admin@mecr.com",
+      "reviews": {},
+      "anomalies": 1
     },
     "Crl-A-0451-2011": {
       "id": "Crl-A-0451-2011",
@@ -98,9 +100,11 @@
         "EV-148"
       ],
       "status": "active",
-      "conflicts": 2,
+      "conflicts": 4,
       "createdAt": "2026-10-20T10:23:20.557450+00:00",
-      "owner": "admin@mecr.com"
+      "owner": "admin@mecr.com",
+      "reviews": {},
+      "anomalies": 1
     },
     "IN-REAL-02": {
       "id": "IN-REAL-02",
@@ -127,9 +131,11 @@
         "EV-152"
       ],
       "status": "active",
-      "conflicts": 2,
+      "conflicts": 4,
       "createdAt": "2026-10-20T10:23:32.910993+00:00",
-      "owner": "admin@mecr.com"
+      "owner": "admin@mecr.com",
+      "reviews": {},
+      "anomalies": 2
     },
     "IN-REAL-01-SVH": {
       "id": "IN-REAL-01-SVH",
@@ -198,7 +204,8 @@
       "type": "image/jpeg",
       "linkedTo": "p2",
       "caseId": "Crl-MC-1622-2006",
-      "uploadedAt": "2026-10-17T12:59:20.201197+00:00"
+      "uploadedAt": "2026-10-17T12:59:20.201197+00:00",
+      "demo": true
     },
     "EV-0119": {
       "id": "EV-0119",
@@ -207,7 +214,8 @@
       "type": "image/jpeg",
       "linkedTo": "p2",
       "caseId": "Crl-MC-1622-2006",
-      "uploadedAt": "2026-10-17T12:59:20.201211+00:00"
+      "uploadedAt": "2026-10-17T12:59:20.201211+00:00",
+      "demo": true
     },
     "EV-0121": {
       "id": "EV-0121",
@@ -216,7 +224,8 @@
       "type": "application/pdf",
       "linkedTo": "p1",
       "caseId": "Crl-MC-1622-2006",
-      "uploadedAt": "2026-10-17T12:59:20.201222+00:00"
+      "uploadedAt": "2026-10-17T12:59:20.201222+00:00",
+      "demo": true
     },
     "EV-0122": {
       "id": "EV-0122",
@@ -225,7 +234,8 @@
       "type": "audio/mpeg",
       "linkedTo": "p3",
       "caseId": "Crl-MC-1622-2006",
-      "uploadedAt": "2026-10-17T12:59:20.201231+00:00"
+      "uploadedAt": "2026-10-17T12:59:20.201231+00:00",
+      "demo": true
     },
     "EV-145": {
       "id": "EV-145",

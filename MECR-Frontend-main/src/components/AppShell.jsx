@@ -3,7 +3,8 @@ import { logout, getUser, isAdmin } from '../lib/api'
 
 const NAV = [
   { to: '/', label: 'Dashboard', num: '01' },
-  { to: '/cases/new', label: 'New Case', num: '02' }
+  { to: '/cases/new', label: 'New Case', num: '02' },
+  { to: '/forgery-check', label: 'Forgery Screen', num: '03' }
 ]
 
 export default function AppShell() {
@@ -17,7 +18,7 @@ export default function AppShell() {
 
   const adminLinks = isAdmin()
     ? [
-        { to: '/admin', label: 'Admin Panel', num: '03' }
+        { to: '/admin', label: 'Admin Panel', num: '04' }
       ]
     : []
 

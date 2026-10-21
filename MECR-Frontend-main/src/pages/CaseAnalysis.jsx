@@ -7,7 +7,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import {
   getAnomalies, getCase, getConflictMatrix, getDocumentAnalysis, getEntities,
-  getGraph, getReportContent, regenerateReport, downloadReportPdf, runAnalysis
+  getGraph, getParties, getReportContent, regenerateReport, downloadReportPdf,
+  reviewFinding, runAnalysis
 } from '../lib/api'
 import { Badge, Button, Card, Eyebrow } from '../components/ui/Primitives'
 
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'viewer', label: 'Documents' },
   { id: 'graph', label: 'Knowledge Graph' },
   { id: 'entities', label: 'Entities (NER)' },
+  { id: 'parties', label: 'Parties' },
   { id: 'report', label: 'Report' }
 ]
 
@@ -123,6 +125,7 @@ export default function CaseAnalysis() {
       {tab === 'viewer' && <Documents caseId={caseId} />}
       {tab === 'graph' && <KnowledgeGraph caseId={caseId} />}
       {tab === 'entities' && <Entities caseId={caseId} />}
+      {tab === 'parties' && <Parties caseId={caseId} />}
       {tab === 'report' && <Report caseId={caseId} />}
     </div>
   )
@@ -436,6 +439,25 @@ function MentionEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, t
   )
 }
 
+function LinkEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, data }) {
+  const [path] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
+  const dim = data?.dim
+  const inferred = data?.inferred || data?.relation === 'case-party'
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      markerEnd={dim ? undefined : markerEnd}
+      style={{
+        stroke: inferred ? '#B8863A' : '#7E8FA8',
+        strokeWidth: inferred ? 1.7 : 2,
+        strokeDasharray: inferred ? '3 4' : undefined,
+        opacity: dim ? 0.1 : 0.85,
+      }}
+    />
+  )
+}
+
 function ConflictEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd }) {
   const [path] = getSmoothStepPath({
     sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, borderRadius: 18
@@ -453,7 +475,11 @@ function ConflictEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, 
 }
 
 const graphNodeTypes = { documentNode: DocumentNode, entityNode: EntityNode }
-const graphEdgeTypes = { mentionEdge: MentionEdge, conflictEdge: ConflictEdge }
+const graphEdgeTypes = {
+  mentionEdge: MentionEdge,
+  linkEdge: LinkEdge,
+  conflictEdge: ConflictEdge,
+}
 
 function GraphPlaceholder({ text }) {
   return (
@@ -679,6 +705,116 @@ function Entities({ caseId }) {
   )
 }
 
+// --- Parties / defendant-wise evidence summary ------------------------------
+
+function Parties({ caseId }) {
+  const [parties, setParties] = useState([])
+  const [status, setStatus] = useState('loading')
+
+  useEffect(() => {
+    setStatus('loading')
+    getParties(caseId)
+      .then((rows) => { setParties(Array.isArray(rows) ? rows : []); setStatus('ready') })
+      .catch(() => setStatus('error'))
+  }, [caseId])
+
+  if (status === 'loading') {
+    return <Card className="p-6 text-sm text-textsoft">Loading parties and evidence links…</Card>
+  }
+  if (status === 'error') {
+    return <Card className="p-6 text-sm text-conflict">Could not load the party summary for this case.</Card>
+  }
+  if (parties.length === 0) {
+    return <Card className="p-6 text-sm text-textsoft">No parties recorded for this case.</Card>
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4">
+        <p className="text-xs text-textsoft">
+          Evidence is attributed to each party from explicit links, document mentions, and — in
+          single-defendant cases — the case file itself. Inferred exhibits are marked separately so
+          they are never presented as manually linked.
+        </p>
+      </Card>
+
+      {parties.map((p) => (
+        <Card key={p.id} className="p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif text-lg font-semibold text-ink">{p.name}</h3>
+                <Badge tone="court">{p.role || 'party'}</Badge>
+                {p.inferredEvidenceIds?.length > 0 && (
+                  <Badge tone="gold">{p.inferredEvidenceIds.length} inferred</Badge>
+                )}
+              </div>
+              <div className="text-[11px] font-mono text-textsoft mt-1">
+                {p.linkedEvidenceCount || 0} linked · {p.evidenceCount || 0} total exhibits
+              </div>
+            </div>
+            <div className="flex gap-2 text-center">
+              <div className="bg-paperdim/60 rounded-md px-3 py-2">
+                <div className="font-mono text-lg font-semibold text-conflict">{p.conflicts || 0}</div>
+                <div className="text-[10px] uppercase font-mono text-textsoft">Conflicts</div>
+              </div>
+              <div className="bg-paperdim/60 rounded-md px-3 py-2">
+                <div className="font-mono text-lg font-semibold text-gold">{p.anomalies || 0}</div>
+                <div className="text-[10px] uppercase font-mono text-textsoft">Anomalies</div>
+              </div>
+            </div>
+          </div>
+
+          {p.documents?.length > 0 ? (
+            <div className="mt-4 overflow-x-auto border border-line rounded-md">
+              <table className="w-full text-xs">
+                <thead className="bg-surface/70 text-textsoft font-mono uppercase text-[10px]">
+                  <tr>
+                    <th className="text-left px-3 py-2">Exhibit</th>
+                    <th className="text-left px-3 py-2">Kind</th>
+                    <th className="text-left px-3 py-2">Text</th>
+                    <th className="text-left px-3 py-2">Attribution</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {p.documents.map((d) => (
+                    <tr key={d.id} className="border-t border-line/60">
+                      <td className="px-3 py-2 text-ink">
+                        <span className="font-mono text-[11px] text-gold mr-2">{d.id}</span>
+                        {d.name}
+                      </td>
+                      <td className="px-3 py-2 text-textsoft">{d.kind}</td>
+                      <td className="px-3 py-2">
+                        {d.hasText
+                          ? <span className="text-verified">Extracted</span>
+                          : <span className="text-gold">No text / OCR needed</span>}
+                      </td>
+                      <td className="px-3 py-2">
+                        {d.inferred
+                          ? <Badge tone="gold">Inferred</Badge>
+                          : <Badge tone="verified">Linked</Badge>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-textsoft">No exhibits attributed to this party.</p>
+          )}
+
+          {p.missing?.length > 0 && (
+            <div className="mt-3 text-xs text-textsoft">
+              <span className="font-semibold text-ink">Missing information: </span>
+              {p.missing.join(' · ')}
+            </div>
+          )}
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 // --- Module 4: explainable report ------------------------------------------
 
 function Report({ caseId }) {
@@ -686,6 +822,7 @@ function Report({ caseId }) {
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [reviewing, setReviewing] = useState({})
   const [error, setError] = useState(null)
 
   function loadReport() {
@@ -741,6 +878,57 @@ function Report({ caseId }) {
     a.download = `${(report?.case?.caseNumber || caseId).replace(/[^A-Za-z0-9]+/g, '_')}-conflict-report.json`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  async function handleReview(findingId, status) {
+    setReviewing((prev) => ({ ...prev, [findingId]: true }))
+    try {
+      const res = await reviewFinding(caseId, findingId, status)
+      setReport((prev) => {
+        if (!prev) return prev
+        const replace = (list) => (list || []).map((item) =>
+          String(item.id) === String(findingId)
+            ? { ...item, review: res.review || { status: 'pending' } }
+            : item
+        )
+        return {
+          ...prev,
+          conflicts: replace(prev.conflicts),
+          anomalies: replace(prev.anomalies),
+          reviewSummary: res.reviewSummary || prev.reviewSummary,
+        }
+      })
+    } catch (err) {
+      setError(err.message || 'Failed to save the review decision')
+    } finally {
+      setReviewing((prev) => ({ ...prev, [findingId]: false }))
+    }
+  }
+
+  function ReviewActions({ findingId, status }) {
+    const busy = !!reviewing[findingId]
+    const button = (value, label) => (
+      <button
+        type="button"
+        disabled={busy || status === value}
+        onClick={() => handleReview(findingId, value)}
+        className={`text-[10px] font-mono font-semibold px-2 py-1 rounded border transition-colors disabled:opacity-40 ${
+          status === value
+            ? 'border-ink bg-ink text-paper'
+            : 'border-line text-textsoft hover:text-ink hover:border-gold'
+        }`}
+      >
+        {label}
+      </button>
+    )
+    return (
+      <div className="flex items-center gap-1.5 mt-2 no-print">
+        <span className="text-[10px] font-mono uppercase text-textsoft mr-1">Review</span>
+        {button('confirmed', 'Confirm')}
+        {button('dismissed', 'Dismiss')}
+        {button('pending', 'Reset')}
+      </div>
+    )
   }
 
   if (loading) {
@@ -868,6 +1056,7 @@ function Report({ caseId }) {
                     <th className="p-2.5">Type</th>
                     <th className="p-2.5">Extracted Characters</th>
                     <th className="p-2.5">Processing Status</th>
+                    <th className="p-2.5">Readability</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -883,6 +1072,13 @@ function Report({ caseId }) {
                         }`}>
                           {ev.status}
                         </span>
+                      </td>
+                      <td className="p-2.5 text-[11px] text-textsoft">
+                        {ev.ocrRequired
+                          ? <span className="text-amber-700">OCR required — text not fully verified</span>
+                          : ev.status === 'processed'
+                            ? <span className="text-emerald-700">Text extracted</span>
+                            : <span className="text-amber-700">No usable text</span>}
                       </td>
                     </tr>
                   ))}
@@ -955,6 +1151,7 @@ function Report({ caseId }) {
                         <p className="text-textsoft"><b>Recommendation:</b> {c.recommendation}</p>
                       )}
                     </div>
+                    <ReviewActions findingId={c.id} status={rev.status || 'pending'} />
                   </div>
                 )
               })}
@@ -1005,6 +1202,7 @@ function Report({ caseId }) {
                         <b>Related Exhibits:</b> {a.sources.join(', ')}
                       </p>
                     )}
+                    <ReviewActions findingId={a.id} status={rev.status || 'pending'} />
                   </div>
                 )
               })}
