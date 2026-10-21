@@ -39,6 +39,7 @@ background — the log prints `[warmup] models preloaded` when they are ready
 first analysis is slightly slower until warm-up finishes.
 
 - API docs: `http://127.0.0.1:8000/docs`
+- Health check: `http://127.0.0.1:8000/health` → `{"status":"ok",...}`
 
 ### 3. Frontend (terminal 2, repository root)
 

@@ -509,6 +509,12 @@ async def _no_store_api(request: Request, call_next):
     return response
 
 
+@app.get("/health")
+async def health():
+    """Unauthenticated liveness probe for local monitors and hosting platforms."""
+    return {"status": "ok", "service": "mecr-backend", "version": app.version}
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
